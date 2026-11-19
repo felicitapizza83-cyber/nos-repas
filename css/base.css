@@ -1,0 +1,120 @@
+/* Couleurs, typographie, mise en page générale (iPhone : encoche et barre du bas). */
+:root {
+  --bg: #f7f3ec;
+  --surface: #fffdf9;
+  --surface-2: #f0ebe2;
+  --text: #2b2a26;
+  --muted: #7a756b;
+  --line: #e4ddd0;
+  --primary: #4f7a5a;
+  --primary-ink: #ffffff;
+  --primary-soft: #e3ece4;
+  --accent: #c8693f;
+  --accent-soft: #f6e3d8;
+  --danger: #b3413a;
+  --danger-soft: #f6dfdc;
+  --ok: #3f7d4f;
+  --shadow: 0 1px 2px rgba(60, 50, 30, .06), 0 4px 14px rgba(60, 50, 30, .06);
+  --radius: 16px;
+  --tabbar-h: 58px;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #171a17;
+    --surface: #212521;
+    --surface-2: #2a2f2a;
+    --text: #ecebe6;
+    --muted: #a19d93;
+    --line: #343a34;
+    --primary: #8bbd95;
+    --primary-ink: #13251a;
+    --primary-soft: #26352a;
+    --accent: #e48d63;
+    --accent-soft: #3a2a22;
+    --danger: #e57a72;
+    --danger-soft: #3b2422;
+    --ok: #8bbd95;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .3);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #171a17; --surface: #212521; --surface-2: #2a2f2a; --text: #ecebe6; --muted: #a19d93;
+  --line: #343a34; --primary: #8bbd95; --primary-ink: #13251a; --primary-soft: #26352a;
+  --accent: #e48d63; --accent-soft: #3a2a22; --danger: #e57a72; --danger-soft: #3b2422; --ok: #8bbd95;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.4 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+  min-height: 100vh;
+  overscroll-behavior-y: none;
+}
+body.no-scroll { overflow: hidden; }
+
+h1, h2, h3 { margin: 0; line-height: 1.25; }
+h2 { font-size: 1.25rem; }
+h3 { font-size: 1.02rem; }
+p { margin: .4rem 0; }
+small { font-size: .8rem; }
+a { color: var(--primary); }
+s { color: var(--muted); }
+
+.topbar {
+  position: sticky; top: 0; z-index: 10;
+  padding: calc(env(safe-area-inset-top) + 10px) 16px 10px;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: saturate(1.4) blur(14px);
+  -webkit-backdrop-filter: saturate(1.4) blur(14px);
+}
+.topbar-in { max-width: 608px; margin: 0 auto; }
+.topbar h1 { font-size: 1.6rem; letter-spacing: -.02em; }
+.back { display: inline-block; font-weight: 600; text-decoration: none; margin-bottom: 2px; }
+.back[hidden] { display: none; }
+
+.view {
+  max-width: 640px; margin: 0 auto;
+  padding: 4px 16px calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 28px);
+}
+
+.tabbar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+  display: grid; grid-template-columns: repeat(6, 1fr);
+  height: calc(var(--tabbar-h) + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid var(--line);
+}
+.tabbar a {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  color: var(--muted); text-decoration: none; font-size: .66rem; font-weight: 500;
+}
+.tabbar svg {
+  width: 25px; height: 25px; fill: none; stroke: currentColor;
+  stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round;
+}
+.tabbar a.active { color: var(--primary); }
+.tabbar a.active svg { stroke-width: 2.1; }
+
+/* Utilitaires */
+.muted { color: var(--muted); }
+.small { font-size: .85rem; }
+.center { text-align: center; display: block; margin-left: auto; margin-right: auto; }
+.grow { flex: 1; min-width: 0; }
+.hidden { display: none !important; }
+.row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+.row-between { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.stack { display: flex; flex-direction: column; gap: 12px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.plain { list-style: none; margin: 0; padding: 0; }
+.ok { color: var(--ok); font-weight: 600; }
+.danger { color: var(--danger); font-weight: 600; }
+.empty { text-align: center; color: var(--muted); padding: 2rem 0; }
