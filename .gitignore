@@ -1,0 +1,5 @@
+# Documents personnels : ne jamais publier
+*.docx
+~$*
+# Système
+.DS_Store
