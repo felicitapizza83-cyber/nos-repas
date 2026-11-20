@@ -352,3 +352,11 @@ input[type=checkbox] { width: 22px; height: 22px; min-height: 0; accent-color: v
 .cuisine-ings li.done .box { background: var(--primary-soft); border-color: var(--primary); }
 .cuisine-nav { display: grid; grid-template-columns: 1fr 2fr; gap: 10px; max-width: 640px; width: 100%; margin: 0 auto; }
 .cuisine-nav .btn { min-height: 54px; font-size: 1.05rem; }
+
+/* ---------- Envies ---------- */
+.slot.envie { background: var(--accent-soft); }
+.envie-pill { background: var(--accent-soft); color: var(--accent); }
+.envie-plan { margin-top: 8px; padding: 8px 10px; border-radius: 10px; background: var(--primary-soft); display: flex; align-items: center; gap: 10px; }
+.envie-plan.vide { background: var(--surface-2); }
+.envie-plan .grow small { display: block; }
+.link-plain { background: none; border: none; padding: 0; text-align: left; color: var(--text); cursor: pointer; }
