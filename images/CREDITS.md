@@ -41,3 +41,14 @@ sans obligation de citer l'auteur). Retrouver une photo : https://unsplash.com/p
 | gateau-citron | photo-1691242720281-9269de4d9f86 |
 | crepes | photo-1771250248306-3da13dac0a50 |
 | marche | photo-1566385101042-1a0aa0c1268c |
+| couscous | photo-1541518763669-27fef04b14ea |
+| tajine | photo-1682370207954-c8a9cccaabb4 |
+| chakchouka | photo-1757972367524-5272633a75df |
+| wok | photo-1585032226651-759b368d7246 |
+| pizza | photo-1513104890138-7c749659a591 |
+| burger | photo-1561758033-d89a9ad46330 |
+| quiche | photo-1767065584177-9ceb902eec7a |
+| falafel | photo-1593001872095-7d5b3868fb1d |
+| taboule | photo-1702650657375-934239d8b472 |
+| gratin | photo-1768204039572-9e62db7b39fd |
+| bowl | photo-1542354255-839e272e3408 |
