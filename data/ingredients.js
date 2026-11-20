@@ -149,7 +149,31 @@ APP_DATA.rayons = [
     ['fleur-oranger', "Eau de fleur d'oranger", PL, 'ml', 200, 2.2, true],
     ['cannelle', 'Cannelle', PL, 'pot', 1, 1.8, true],
     ['levure', 'Levure chimique', PL, 'pot', 1, 1.2, true],
-    ['sirop-erable', "Sirop d'érable", PL, 'ml', 250, 4.5, true]
+    ['sirop-erable', "Sirop d'érable", PL, 'ml', 250, 4.5, true],
+    ['harissa', 'Harissa', PL, 'pot', 1, 1.9, true],
+
+    // Ajouts (bibliothèque enrichie)
+    ['navet', 'Navets', FL, 'g', 1000, 1.9],
+    ['patate-douce', 'Patates douces', FL, 'g', 1000, 3.2],
+    ['chou-fleur', 'Chou-fleur', FL, 'pc', 1, 2.5],
+    ['poireau', 'Poireaux', FL, 'g', 1000, 2.6],
+    ['dinde', 'Escalopes de dinde', BV, 'g', 500, 6.2],
+    ['boeuf-braiser', 'Bœuf à braiser', BV, 'g', 500, 8.5],
+    ['cabillaud', 'Filets de cabillaud', SU, 'g', 400, 6.9],
+    ['fromage-chevre', 'Bûche de chèvre', CR, 'g', 150, 2.4],
+    ['ricotta', 'Ricotta', CR, 'g', 250, 2.3],
+    ['emmental', 'Emmental râpé', CR, 'g', 200, 2.2],
+    ['tofu', 'Tofu nature', FR, 'g', 400, 2.6],
+    ['pate-brisee', 'Pâte brisée complète (rouleau)', FR, 'pc', 1, 1.4],
+    ['pate-pizza', 'Pâte à pizza (rouleau)', FR, 'pc', 1, 1.6],
+    ['galette-sarrasin', 'Galettes de sarrasin', FR, 'pc', 6, 2.6],
+    ['semoule', 'Semoule complète', EP, 'g', 1000, 2.2],
+    ['quinoa', 'Quinoa', EP, 'g', 500, 3.6],
+    ['boulgour', 'Boulgour', EP, 'g', 500, 1.9],
+    ['lentilles-corail', 'Lentilles corail', EP, 'g', 500, 2.4],
+    ['nouilles', 'Nouilles (riz ou blé complet)', EP, 'g', 400, 2.3],
+    ['pain-pita', 'Pains pita', BO, 'pc', 4, 1.8],
+    ['pain-burger', 'Pains à burger complets', BO, 'pc', 4, 2.2]
   ];
 
   /* Lieu d'achat par défaut (modifiable dans l'app, écran « Ingrédients & prix ») :
@@ -158,7 +182,8 @@ APP_DATA.rayons = [
      - le reste → drive (Leclerc ou Chronodrive). */
   const FOURCHE_EPICERIE = new Set(['riz-basmati', 'riz-complet', 'riz-risotto', 'riz-paella', 'pates', 'linguine',
     'lasagne', 'lentilles', 'flocons-avoine', 'poudre-amande', 'noix', 'dattes', 'chocolat-noir', 'cacao',
-    'olives', 'capres', 'lait-coco', 'tomate-concassee', 'pois-chiches', 'haricots-blancs', 'haricots-rouges', 'mais']);
+    'olives', 'capres', 'lait-coco', 'tomate-concassee', 'pois-chiches', 'haricots-blancs', 'haricots-rouges', 'mais',
+    'semoule', 'quinoa', 'boulgour', 'lentilles-corail', 'nouilles']);
   const lieuPar = (id, rayon) =>
     rayon === FL ? 'producteur'
       : (rayon === PL || FOURCHE_EPICERIE.has(id)) ? 'fourche'
@@ -184,7 +209,11 @@ APP_DATA.rayons = [
     'mais': 150, 'thon': 150, 'maquereau': 250, 'sardines': 210,
     'epinards': 25, 'haricots-verts': 30, 'brocoli': 30, 'petits-pois': 70, 'crevettes': 80,
     'fruits-mer': 70, 'lieu-noir': 80, 'fruits-rouges': 45, 'pain': 650,
-    'huile-olive': 900, 'bouillon': 10, 'farine': 340, 'maizena': 350, 'sucre': 400, 'sirop-erable': 260
+    'huile-olive': 900, 'bouillon': 10, 'farine': 340, 'maizena': 350, 'sucre': 400, 'sirop-erable': 260,
+    'navet': 20, 'patate-douce': 85, 'chou-fleur': 250, 'poireau': 30, 'dinde': 105, 'boeuf-braiser': 150,
+    'cabillaud': 80, 'fromage-chevre': 300, 'ricotta': 150, 'emmental': 380, 'tofu': 130, 'pate-brisee': 990,
+    'pate-pizza': 700, 'galette-sarrasin': 120, 'semoule': 350, 'quinoa': 370, 'boulgour': 350,
+    'lentilles-corail': 340, 'nouilles': 360, 'pain-pita': 170, 'pain-burger': 150
   };
 
   /* Stock minimum (Garde-manger) : en dessous, le produit s'ajoute tout seul aux courses
