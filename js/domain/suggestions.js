@@ -43,6 +43,7 @@ App.suggest = {
 
   /** Remplit les cases vides de la semaine (soirs, et midis si activés). */
   remplir(state, semaine) {
+    App.suggest.placerEnvies(state, semaine);
     const libres = [];
     App.JOURS.forEach(j => App.MOMENTS.forEach(m => {
       if (m.id === 'midi' && !state.settings.midis) return;
@@ -64,7 +65,7 @@ App.suggest = {
         && App.suggest.famille(r) !== precedent; // pas deux fois la même famille d'affilée
       const r = choix.find(ok) || choix.find(x => !pris.has(x.id)) || choix[0];
       if (!r) return;
-      semaine.slots[id] = { type: 'maison', repasId: r.id };
+      semaine.slots[id] = { type: 'maison', repasId: r.id, source: 'auto' };
       pris.add(r.id);
       const f = App.suggest.famille(r);
       compte[f] = (compte[f] || 0) + 1;
@@ -131,21 +132,146 @@ App.suggest = {
     return autre;
   },
 
-  /** Repas de la bibliothèque qui correspondent à une envie (« poisson », « pâtes crème »…). */
-  pourEnvie(texte, state) {
-    const mots = App.u.norm(texte).split(/[^a-z0-9]+/).filter(m => m.length >= 3);
-    if (!mots.length) return [];
-    return state.repas
+  // ----- Envies : comprendre la phrase, puis placer un plat dans le menu -----
+
+  /** Mots d'envie → caractéristiques (tags) et mots-clés de noms de plats. */
+  ENVIES: [
+    { mots: ['poisson', 'iode', 'saumon', 'cabillaud', 'thon', 'truite', 'sardine', 'maquereau'], cat: 'Poisson', tags: ['poisson', 'poisson-gras'], noms: ['saumon', 'cabillaud', 'thon', 'truite', 'sardine', 'maquereau', 'poisson', 'lieu'] },
+    { mots: ['crevette', 'fruits', 'paella'], tags: ['fruits-de-mer'], noms: ['crevette', 'paella'] },
+    { mots: ['viande', 'boeuf', 'steak', 'bavette', 'kefta', 'hache'], tags: ['viande-rouge'], noms: ['boeuf', 'bavette', 'kefta', 'boulette', 'burger', 'bolognaise', 'lok lak'] },
+    { mots: ['poulet', 'volaille', 'dinde'], tags: ['volaille'], noms: ['poulet', 'dinde'] },
+    { mots: ['vege', 'vegetarien', 'vegetal', 'legume', 'legumes', 'sans viande'], tags: ['vegetarien', 'legumes'], noms: [] },
+    { mots: ['leger', 'light', 'leg', 'healthy', 'sain', 'mincir', 'detox'], tags: ['leger', 'legumes', 'cru'], noms: ['salade', 'soupe', 'veloute', 'vapeur', 'papillote'] },
+    { mots: ['reconfortant', 'cocooning', 'chaud', 'hiver', 'doudou', 'gourmand', 'familial', 'famille', 'maman', 'grand-mere', 'enfance'], tags: ['reconfortant'], noms: ['gratin', 'hachis', 'lasagne', 'blanquette', 'tajine', 'risotto', 'soupe'] },
+    { mots: ['oriental', 'marocain', 'maghreb', 'algerien', 'tunisien', 'libanais'], tags: ['epices'], noms: ['couscous', 'tajine', 'harira', 'chakchouka', 'kefta', 'loubia', 'mjadra', 'libanais', 'falafel', 'taboule', 'algerienne', 'chermoula'] },
+    { mots: ['epice', 'epices', 'epicé', 'relevé', 'releve', 'piquant', 'indien', 'curry'], tags: ['epices'], noms: ['curry', 'dahl', 'tikka', 'chili'] },
+    { mots: ['italien', 'italie', 'pates', 'pasta', 'pizza'], tags: [], noms: ['pates', 'penne', 'linguine', 'rigatoni', 'lasagne', 'risotto', 'gnocchi', 'pizza', 'minestrone', 'pasta'] },
+    { mots: ['asiatique', 'asie', 'chinois', 'thai', 'japonais', 'wok', 'nouilles', 'soja', 'sushi', 'maki', 'poke'], tags: [], noms: ['poke', 'wok', 'nouille', 'cantonais', 'thai', 'teriyaki', 'lok lak', 'tofu'] },
+    { mots: ['mexicain', 'tex', 'burritos', 'tacos', 'fajitas'], tags: [], noms: ['chili', 'fajitas', 'burrito', 'wrap'] },
+    { mots: ['soupe', 'veloute', 'potage', 'bouillon'], tags: [], noms: ['soupe', 'veloute', 'harira', 'minestrone'] },
+    { mots: ['salade composee', 'bowl'], tags: ['cru'], noms: ['bowl', 'salade'] },
+    { mots: ['salade', 'frais', 'fraicheur', 'crudites', 'ete'], tags: ['cru'], noms: ['salade', 'taboule', 'bowl', 'poke'] },
+    { mots: ['rapide', 'vite', 'simple', 'flemme', 'facile'], tags: ['rapide'], noms: [] },
+    { mots: ['thermomix', 'tm6', 'tm7', 'cookidoo'], tags: ['thermomix'], noms: [] },
+    { mots: ['oeuf', 'oeufs', 'omelette'], tags: ['oeufs'], noms: ['omelette', 'chakchouka', 'tortilla'] },
+    { mots: ['legumineuse', 'lentille', 'lentilles', 'pois', 'haricot', 'haricots'], tags: ['legumineuses'], noms: ['lentille', 'pois chiche', 'haricot', 'dahl'] },
+    { mots: ['sucre', 'dessert', 'gateau', 'douceur', 'gouter', 'chocolat', 'cake', 'patisserie'], douceur: true, tags: [], noms: ['chocolat', 'brownie', 'fondant', 'cookie', 'gateau', 'cake', 'muffin', 'crumble', 'clafoutis', 'crepe'] }
+  ],
+
+  /** Petits mots sans intérêt pour trouver un plat. */
+  MOTS_VIDES: new Set(['des', 'une', 'les', 'aux', 'avec', 'sans', 'pour', 'chez', 'plus', 'moins', 'tres', 'bon', 'bonne',
+    'bons', 'petit', 'petite', 'gros', 'envie', 'plat', 'plats', 'quelque', 'chose', 'truc', 'faire', 'manger', 'mange',
+    'cette', 'semaine', 'soir', 'midi', 'aime', 'aimerais', 'voudrais', 'genre', 'style', 'fait', 'maison', 'beaucoup', 'bien']),
+
+  /** Repas qui correspondent à une envie, du plus pertinent au moins pertinent : [{ r, s }] */
+  analyserEnvie(texte, state) {
+    const n = App.u.norm(texte);
+    const mots = n.split(/[^a-z0-9-]+/).filter(m => m.length >= 3 && !App.suggest.MOTS_VIDES.has(m));
+    if (!mots.length) return { douceur: false, resultats: [] };
+    const regles = App.suggest.ENVIES.filter(R => R.mots.some(m => n.includes(App.u.norm(m))));
+    const douceur = regles.some(R => R.douceur);
+    const obj = App.suggest.objectif(App.store.semaine());
+    const resultats = state.repas
+      .filter(r => douceur ? r.categorie === 'Douceurs' : r.categorie !== 'Douceurs')
       .map(r => {
-        const hay = App.u.norm(r.nom + ' ' + r.categorie + ' ' +
-          r.tags.map(t => window.APP_DATA.tags[t] || t).join(' ') + ' ' +
-          r.ingredients.map(([id]) => (App.store.ingredient(id) || {}).nom || id).join(' '));
-        const s = mots.reduce((n, m) => n + (hay.includes(m) || hay.includes(m.replace(/s$/, '')) ? 1 : 0), 0);
+        const nom = App.u.norm(r.nom);
+        const ings = App.u.norm(r.ingredients.map(([id]) => (App.store.ingredient(id) || {}).nom || id).join(' '));
+        let s = 0;
+        mots.forEach(m => {
+          const m2 = m.replace(/s$/, '');
+          if (nom.includes(m2)) s += 4;          // le mot est dans le nom du plat
+          else if (ings.includes(m2)) s += 2;    // c'est un ingrédient du plat
+        });
+        regles.forEach(R => {
+          const i = R.noms.findIndex(k => nom.includes(App.u.norm(k)));
+          if (i >= 0) s += i < 3 ? 5 : 3;                 // les plats les plus typiques en premier
+          if (R.cat && r.categorie === R.cat) s += 3;     // « un bon poisson » : un plat de poisson
+          s += 2 * R.tags.filter(t => r.tags.includes(t)).length;
+        });
+        if (s > 0) s += 0.3 * App.suggest.score(r, obj) + (r.favori ? 1 : 0) + ({ adore: 1, bof: -3 }[r.avis] || 0);
         return { r, s };
       })
       .filter(x => x.s > 0)
-      .sort((a, b) => b.s - a.s)
-      .slice(0, 5)
-      .map(x => x.r);
+      .sort((a, b) => b.s - a.s);
+    return { douceur, resultats };
+  },
+
+  /** Compatibilité : liste simple des repas correspondants. */
+  pourEnvie(texte, state) {
+    return App.suggest.analyserEnvie(texte, state).resultats.slice(0, 5).map(x => x.r);
+  },
+
+  /** Cases encore à venir de la semaine (on ne place pas une envie sur un repas passé). */
+  casesAVenir(state, k = state.semaineActive) {
+    const res = [];
+    const maintenant = new Date();
+    App.JOURS.forEach((j, i) => App.MOMENTS.forEach(m => {
+      if (m.id === 'midi' && !state.settings.midis) return;
+      const d = App.u.parseKey(k); d.setDate(d.getDate() + i);
+      d.setHours(m.id === 'midi' ? 12 : 19, 0, 0, 0);
+      if (d > maintenant) res.push(`${j.id}-${m.id}`);
+    }));
+    return res;
+  },
+
+  /** L'envie est-elle toujours au menu ? */
+  envieAuMenu(semaine, e) {
+    if (e.douceurId) return (semaine.douceurs || []).includes(e.douceurId);
+    const s = e.slotId && semaine.slots[e.slotId];
+    return !!(s && s.envieId === e.id);
+  },
+
+  /** Place une envie dans le menu : plat de la bibliothèque, ou case « à choisir » si rien ne correspond. */
+  placerEnvie(state, semaine, e, repasId = null) {
+    const { douceur, resultats } = App.suggest.analyserEnvie(e.texte, state);
+    const deja = new Set(Object.values(semaine.slots).map(s => s && s.repasId));
+    let choix = repasId || (resultats.find(x => !deja.has(x.r.id)) || resultats[0] || {}).r?.id || null;
+    if (douceur && !choix) choix = (App.suggest.candidatsDouceur(state, semaine)[0] || {}).id || null; // « envie de sucré »
+
+    // Envie sucrée : elle remplace un des gâteaux de la semaine
+    if (douceur && choix && !repasId || (repasId && (App.store.repas(repasId) || {}).categorie === 'Douceurs')) {
+      semaine.douceurs = semaine.douceurs || [];
+      const ancien = e.douceurId && semaine.douceurs.includes(e.douceurId) ? e.douceurId : null;
+      if (ancien) semaine.douceurs = semaine.douceurs.map(x => x === ancien ? choix : x);
+      else if (!semaine.douceurs.includes(choix)) {
+        if (semaine.douceurs.length >= state.settings.douceursParSemaine) semaine.douceurs[semaine.douceurs.length - 1] = choix;
+        else semaine.douceurs.push(choix);
+      }
+      e.douceurId = choix; e.slotId = null;
+      return { type: 'douceur', repasId: choix };
+    }
+
+    // Plat : sa case actuelle, sinon une case libre à venir, sinon un plat proposé automatiquement
+    const aVenir = App.suggest.casesAVenir(state);
+    let slotId = e.slotId && semaine.slots[e.slotId] && semaine.slots[e.slotId].envieId === e.id ? e.slotId : null;
+    if (!slotId) slotId = aVenir.find(id => !semaine.slots[id]);
+    if (!slotId) slotId = aVenir.find(id => {
+      const s = semaine.slots[id];
+      return s && s.type === 'maison' && !s.consomme && !s.envieId && s.source !== 'manuel';
+    });
+    if (!slotId) return null; // semaine passée ou entièrement choisie à la main
+    App.stock.annulerConso(state, semaine.slots[slotId]);
+    semaine.slots[slotId] = choix
+      ? { type: 'maison', repasId: choix, source: 'envie', envieId: e.id }
+      : { type: 'envie', label: e.texte, source: 'envie', envieId: e.id };
+    e.slotId = slotId; e.douceurId = null;
+    return { type: choix ? 'plat' : 'a-choisir', slotId, repasId: choix };
+  },
+
+  /** Avant de compléter le menu : chaque envie non placée trouve sa place. */
+  placerEnvies(state, semaine) {
+    (semaine.envies || []).forEach(e => {
+      if (!e.retiree && !App.suggest.envieAuMenu(semaine, e)) App.suggest.placerEnvie(state, semaine, e);
+    });
+  },
+
+  /** Retire le plat d'une envie du menu (la case redevient libre). */
+  retirerEnvie(state, semaine, e) {
+    if (e.douceurId) semaine.douceurs = (semaine.douceurs || []).filter(x => x !== e.douceurId);
+    else if (e.slotId && semaine.slots[e.slotId] && semaine.slots[e.slotId].envieId === e.id) {
+      App.stock.annulerConso(state, semaine.slots[e.slotId]);
+      delete semaine.slots[e.slotId];
+    }
+    e.slotId = null; e.douceurId = null;
   }
 };
