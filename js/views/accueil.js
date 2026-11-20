@@ -31,17 +31,36 @@ App.views.accueil = {
     }
 
     const envies = sem.envies.map(e => {
-      const matches = App.suggest.pourEnvie(e.texte, state);
+      const { resultats } = App.suggest.analyserEnvie(e.texte, state);
+      const auMenu = App.suggest.envieAuMenu(sem, e);
+      const slot = e.slotId ? sem.slots[e.slotId] : null;
+      const plat = auMenu ? App.store.repas(e.douceurId || (slot && slot.repasId)) : null;
+      const autres = resultats.map(x => x.r).filter(r => !plat || r.id !== plat.id).slice(0, 4);
+      const plan = auMenu
+        ? `<div class="envie-plan">
+            ${plat ? `<img class="thumb sm" src="${window.APP_DATA.imageRepas(plat)}" alt=""/>` : '<span class="avatar">💡</span>'}
+            <div class="grow">
+              <small class="muted">${e.douceurId ? 'Gâteau de la semaine' : `Prévu ${esc(App.commun.slotLabel(e.slotId).toLowerCase())}`}</small>
+              ${plat ? `<button class="link-plain" data-action="envie-repas" data-id="${plat.id}"><strong>${esc(plat.nom)}</strong></button>`
+                     : '<strong>Recette à choisir</strong><small class="muted">Aucun plat de la bibliothèque ne correspond encore</small>'}
+            </div>
+            <button class="icon-btn small" data-action="envie-retirer" data-id="${e.id}" aria-label="Retirer du menu" title="Retirer du menu">✕</button>
+          </div>`
+        : `<div class="envie-plan vide">
+            <span class="grow muted small">${e.retiree ? 'Retirée du menu' : 'Pas de case libre cette semaine'}</span>
+            <button class="btn" data-action="envie-placer" data-id="${e.id}">Mettre au menu</button>
+          </div>`;
       return `
         <li class="envie">
           <div class="envie-head">
             <span class="avatar">${esc((e.auteur || '?')[0])}</span>
             <div class="grow"><strong>${esc(e.texte)}</strong><small class="muted">${esc(e.auteur)}</small></div>
-            <button class="icon-btn small" data-action="envie-del" data-id="${e.id}" aria-label="Supprimer">✕</button>
+            <button class="icon-btn small" data-action="envie-del" data-id="${e.id}" aria-label="Supprimer l’envie">🗑</button>
           </div>
-          ${matches.length ? `<div class="envie-matches">
-              <small class="muted">Dans notre bibliothèque :</small>
-              ${matches.map(r => `<button class="chip chip-btn" data-action="envie-repas" data-id="${r.id}">${esc(r.nom)}</button>`).join('')}
+          ${plan}
+          ${autres.length ? `<div class="envie-matches">
+              <small class="muted">${auMenu ? 'Ou plutôt :' : 'Idées :'}</small>
+              ${autres.map(r => `<button class="chip chip-btn" data-action="envie-choisir" data-id="${e.id}" data-repas="${r.id}">${esc(r.nom)}</button>`).join('')}
             </div>` : ''}
           <div class="envie-actions">
             <a class="link-btn" target="_blank" rel="noopener"
@@ -68,7 +87,7 @@ App.views.accueil = {
           <input name="texte" placeholder="Ex. un bon poisson, quelque chose de réconfortant…" autocomplete="off" />
           <button class="btn btn-primary" type="submit">Ajouter</button>
         </form>
-        ${envies ? `<ul class="plain envies">${envies}</ul>` : '<p class="muted small">Notez vos envies ici : on vous propose les repas qui correspondent, ou des idées de recettes.</p>'}
+        ${envies ? `<ul class="plain envies">${envies}</ul>` : '<p class="muted small">Écrivez une envie (« un bon poisson », « oriental », « réconfortant », « chocolat »…) : un plat qui correspond est placé tout de suite dans le menu de la semaine.</p>'}
       </section>
 
       <section class="card link-card" data-action="go" data-route="objectif">
@@ -111,9 +130,24 @@ App.views.accueil = {
       if (act === 'go') App.router.go(a.dataset.route);
       else if (act === 'moi') App.store.update(s => { s.settings.moi = +a.dataset.i; });
       else if (act === 'question') App.views.accueil.choisirQuestion();
-      else if (act === 'envie-del') App.store.update(() => {
-        const sem = App.store.semaine(); sem.envies = sem.envies.filter(x => x.id !== a.dataset.id);
+      else if (act === 'envie-del') App.store.update(st => {
+        const sem = App.store.semaine(); const e = sem.envies.find(x => x.id === a.dataset.id);
+        if (e) App.suggest.retirerEnvie(st, sem, e);
+        sem.envies = sem.envies.filter(x => x.id !== a.dataset.id);
       });
+      else if (act === 'envie-retirer') App.store.update(st => {
+        const sem = App.store.semaine(); const e = sem.envies.find(x => x.id === a.dataset.id);
+        App.suggest.retirerEnvie(st, sem, e); e.retiree = true;
+      });
+      else if (act === 'envie-placer' || act === 'envie-choisir') {
+        let res = null;
+        App.store.update(st => {
+          const sem = App.store.semaine(); const e = sem.envies.find(x => x.id === a.dataset.id);
+          e.retiree = false;
+          res = App.suggest.placerEnvie(st, sem, e, a.dataset.repas || null);
+        });
+        App.views.accueil.annoncer(res);
+      }
       else if (act === 'envie-repas') App.views.repas.detail(a.dataset.id);
       else if (act === 'envie-creer') App.views.repas.editer(null, a.dataset.texte);
     };
@@ -121,10 +155,23 @@ App.views.accueil = {
       e.preventDefault();
       const texte = e.target.texte.value.trim();
       if (!texte) return;
-      App.store.update(() => {
-        App.store.semaine().envies.push({ id: App.u.uid(), texte, auteur: App.store.moi(), date: Date.now() });
+      let res = null;
+      App.store.update(st => {
+        const sem = App.store.semaine();
+        const e = { id: App.u.uid(), texte, auteur: App.store.moi(), date: Date.now() };
+        sem.envies.push(e);
+        res = App.suggest.placerEnvie(st, sem, e);
       });
+      App.views.accueil.annoncer(res);
     };
+  },
+
+  annoncer(res) {
+    if (!res) return App.ui.toast('Toutes les cases de la semaine sont déjà choisies : touchez « Mettre au menu » pour remplacer un repas.');
+    const r = res.repasId && App.store.repas(res.repasId);
+    if (res.type === 'douceur') App.ui.toast(`🍰 Gâteau de la semaine : ${r.nom}`);
+    else if (res.type === 'plat') App.ui.toast(`💡 Ajouté au menu, ${App.commun.slotLabel(res.slotId).toLowerCase()} : ${r.nom}`);
+    else App.ui.toast(`💡 Case réservée ${App.commun.slotLabel(res.slotId).toLowerCase()} : recette à choisir`);
   },
 
   carteStock(state) {

@@ -7,6 +7,7 @@ App.views.menu = {
     if (!s) return '<span class="muted">—</span>';
     if (s.type === 'ext') return `🍽️ ${esc(s.label || 'Repas extérieur')}${s.montant ? ` · ${euro(s.montant)}` : ''}`;
     if (s.type === 'restes') return '♻️ Restes';
+    if (s.type === 'envie') return `💡 Envie : ${esc(s.label)} <small class="muted">— recette à choisir</small>`;
     const r = App.store.repas(s.repasId);
     const nom = r ? esc(r.nom) : 'Repas supprimé';
     if (s.type === 'reporte') return `<s>${nom}</s> <small class="muted">→ semaine suivante</small>`;
@@ -33,7 +34,7 @@ App.views.menu = {
               <span class="slot-moment">${m.nom}</span>
               ${r && s.type !== 'reporte' ? `<img class="thumb sm" src="${window.APP_DATA.imageRepas(r)}" alt="" loading="lazy"/>` : ''}
               <span class="slot-body">${s ? App.views.menu.slotTexte(s) : '<span class="muted">+ Choisir</span>'}
-                ${s && s.dejaAchete ? '<small class="pill">déjà acheté</small>' : ''}
+                ${s && s.envieId ? '<small class="pill envie-pill">💡 envie</small>' : ''}
                 ${r && s.type === 'maison' && App.suggest.conseille(r, obj) ? `<small class="pill good">${obj.emoji}</small>` : ''}
               </span>
             </button>`;
@@ -158,6 +159,10 @@ App.views.menu = {
         <button class="btn btn-primary" type="submit">Enregistrer</button>
         <small class="muted">Ce repas sort de la liste de courses et son montant compte dans le budget.</small>
       </form>
+      ${s && s.type === 'envie' ? `<div class="chips">
+          <a class="chip chip-btn" target="_blank" rel="noopener" href="${App.views.repas.urlCookidoo(s.label)}">Chercher « ${esc(s.label)} » sur Cookidoo ↗</a>
+          <a class="chip chip-btn" target="_blank" rel="noopener" href="https://www.marmiton.org/recettes/recherche.aspx?aqt=${encodeURIComponent(s.label)}">Marmiton ↗</a>
+          <button class="chip chip-btn" data-action="creer-envie">+ Créer ce repas</button></div>` : ''}
       <h3>${s ? 'Changer de repas' : 'Choisir un repas'}</h3>
       <input type="search" placeholder="Rechercher…" data-live="search" autocomplete="off"/>
       <div class="list-select" id="slot-list">${liste('')}</div>`, (action, target, ov) => {
@@ -168,8 +173,9 @@ App.views.menu = {
       }); App.ui.closeSheet(); };
 
       if (action === 'search') ov.querySelector('#slot-list').innerHTML = liste(target.value);
-      else if (action === 'pick') set({ type: 'maison', repasId: target.dataset.id });
+      else if (action === 'pick') set({ type: 'maison', repasId: target.dataset.id, source: 'manuel' });
       else if (action === 'restes') set({ type: 'restes' });
+      else if (action === 'creer-envie') App.views.repas.editer(null, s.label);
       else if (action === 'vider') set(null);
       else if (action === 'fiche') App.views.repas.detail(s.repasId);
       else if (action === 'ext-toggle') ov.querySelector('.ext-form').classList.toggle('hidden');
@@ -217,7 +223,7 @@ App.views.menu = {
       </div>
       <small class="muted">• = déjà un repas prévu (il sera remplacé)</small>`, (action, target) => {
       if (action !== 'place') return;
-      App.store.update(s => { const w = App.store.semaine(); App.stock.annulerConso(s, w.slots[target.dataset.slot]); w.slots[target.dataset.slot] = { type: 'maison', repasId }; });
+      App.store.update(s => { const w = App.store.semaine(); App.stock.annulerConso(s, w.slots[target.dataset.slot]); w.slots[target.dataset.slot] = { type: 'maison', repasId, source: 'manuel' }; });
       App.ui.closeSheet();
       App.ui.toast(`Ajouté : ${App.commun.slotLabel(target.dataset.slot)}`);
     });
@@ -245,7 +251,7 @@ App.views.menu = {
           const id = `${App.JOURS[i].id}-soir`;
           App.stock.annulerConso(App.store.state, w.slots[id]);
           w.slots[id] = x.startsWith('ext:') ? { type: 'ext', label: x.slice(4), montant: 0 }
-                                             : { type: 'maison', repasId: x };
+                                             : { type: 'maison', repasId: x, source: 'manuel' };
         });
       });
       App.ui.closeSheet();
