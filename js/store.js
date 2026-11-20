@@ -76,15 +76,21 @@
     if (!state.collections) state.collections = collectionsDeDepart(state.repas);
 
     if ((state.dataVersion || 1) < D.version) {
+      const nouveauxRepas = [];
       [['ingredients', D.ingredients], ['repas', D.repas], ['objectifs', D.objectifs]].forEach(([k, src]) => {
         const parId = new Map(state[k].map(x => [x.id, x]));
         src.forEach(x => {
           const ex = parId.get(x.id);
-          if (!ex) state[k].push(structuredClone(x));
+          if (!ex) { state[k].push(structuredClone(x)); if (k === 'repas') nouveauxRepas.push(x); }
           else Object.keys(x).forEach(f => { if (!(f in ex)) ex[f] = structuredClone(x[f]); });
         });
       });
       state.dataVersion = D.version;
+      (state.collections || []).forEach(c => {
+        const def = D.collections.find(x => x.id === c.id);
+        if (def && def.depuisTag) nouveauxRepas.filter(r => r.tags.includes(def.depuisTag))
+          .forEach(r => { if (!c.repas.includes(r.id)) c.repas.push(r.id); });
+      });
     }
     // Ingrédients créés à la main avant l'ajout des lieux d'achat
     state.ingredients.forEach(i => {
