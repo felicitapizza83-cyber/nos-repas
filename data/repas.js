@@ -2,7 +2,7 @@
    Quantités pour 2 adultes (portions: 2). null = « un peu » (produit du placard).
    Tags : voir APP_DATA.tags ; ils relient les repas aux objectifs naturopathie. */
 window.APP_DATA = window.APP_DATA || {};
-APP_DATA.version = 5; // à augmenter quand on ajoute des repas / ingrédients de base
+APP_DATA.version = 6; // à augmenter quand on ajoute des repas / ingrédients de base
 
 APP_DATA.tags = {
   'volaille': 'Volaille',
@@ -23,16 +23,22 @@ APP_DATA.tags = {
   'fromage': 'Fromage / crème',
   'thermomix': 'Thermomix',
   'rapide': 'Rapide',
-  'batch': 'Se garde bien'
+  'batch': 'Se garde bien',
+  'bebe': 'Bébé'
 };
 
-APP_DATA.categories = ['Plats', 'Pâtes & risottos', 'Poisson', 'Salades', 'Douceurs'];
+APP_DATA.categories = ['Plats', 'Pâtes & risottos', 'Poisson', 'Salades', 'Douceurs', 'Bébé'];
 
 (function () {
   const R = (id, nom, categorie, tags, ingredients, notes = '', portions = 2) =>
     ({ id, nom, categorie, tags, ingredients, notes, portions, cookidoo: '', favori: false, avis: null, commentaire: '' });
   const G = (id, nom, classique, tags, ingredients, notes) =>
     ({ ...R(id, nom, 'Douceurs', ['vegetarien', 'thermomix', ...tags], ingredients, notes, 8), classique });
+  /* Repas de bébé : quantités pour UNE portion (pas de sel, pas de sucre, pas de miel avant 1 an).
+     moment : 'legumes' (midi / soir) ou 'fruit' (goûter) · ageMin : âge minimum en mois
+     source : 'maison' (légumes du producteur, mixés) ou 'orchestra' (pot acheté). */
+  const B = (id, nom, moment, ageMin, source, tags, ingredients, notes = '') =>
+    ({ ...R(id, nom, 'Bébé', ['bebe', ...tags], ingredients, notes, 1), moment, ageMin, source });
 
   APP_DATA.repas = [
     // ---------- Plats ----------
@@ -370,6 +376,57 @@ APP_DATA.categories = ['Plats', 'Pâtes & risottos', 'Poisson', 'Salades', 'Douc
     R('salade-lentilles-truite', 'Salade de lentilles & truite fumée', 'Salades',
       ['poisson-gras', 'legumineuses', 'cru'],
       [['lentilles', 150], ['truite-fumee', 120], ['oignon-rouge', 1], ['salade', 1], ['moutarde', null], ['huile-olive', null]]),
+
+
+    // ---------- Bébé ----------
+    B('bb-carotte', 'Purée de carottes', 'legumes', 4, 'maison', ['legumes'],
+      [['carotte', 150], ['huile-colza', null]],
+      'Cuire à la vapeur 20 min (Varoma ou panier), mixer finement. + 1 c. à café d’huile de colza dans l’assiette.\nAstuce : préparer 4 à 6 portions et congeler en bacs à glaçons.'),
+    B('bb-courgette-pdt', 'Purée courgette & pomme de terre', 'legumes', 4, 'maison', ['legumes'],
+      [['courgette', 130], ['pdt', 50], ['huile-colza', null]],
+      'Courgette avec la peau (bio) et pomme de terre à la vapeur 15 min, mixer. + 1 c. à café d’huile de colza.'),
+    B('bb-patate-douce', 'Purée de patate douce', 'legumes', 4, 'maison', ['legumes'],
+      [['patate-douce', 150], ['huile-colza', null]], 'Vapeur 20 min, mixer avec un peu d’eau de cuisson.'),
+    B('bb-butternut', 'Purée de butternut', 'legumes', 4, 'maison', ['legumes'],
+      [['butternut', 0.15], ['huile-colza', null]], 'Vapeur 20 min, mixer. Une butternut fait 5 à 6 portions : congeler le reste.'),
+    B('bb-haricots-verts-pdt', 'Purée haricots verts & pomme de terre', 'legumes', 4, 'maison', ['legumes', 'feuilles-vertes'],
+      [['haricots-verts', 120], ['pdt', 50], ['huile-colza', null]], 'Vapeur 20 min, mixer très finement (les fils des haricots).'),
+    B('bb-petits-pois-carotte', 'Purée petits pois & carotte', 'legumes', 6, 'maison', ['legumes'],
+      [['petits-pois', 90], ['carotte', 70], ['huile-colza', null]], 'Vapeur 15 min, mixer puis passer au tamis si besoin.'),
+    B('bb-brocoli-pdt', 'Purée brocoli & pomme de terre', 'legumes', 6, 'maison', ['legumes', 'feuilles-vertes'],
+      [['brocoli', 100], ['pdt', 60], ['huile-colza', null]], 'Vapeur 15 min, mixer.'),
+    B('bb-epinards-pdt', 'Purée épinards & pomme de terre', 'legumes', 6, 'maison', ['legumes', 'feuilles-vertes'],
+      [['epinards', 80], ['pdt', 80], ['huile-colza', null]], 'Vapeur 15 min, mixer.'),
+    B('bb-poireau-pdt', 'Purée poireau & pomme de terre', 'legumes', 6, 'maison', ['legumes'],
+      [['poireau', 80], ['pdt', 80], ['huile-colza', null]], 'Blanc de poireau uniquement. Vapeur 20 min, mixer.'),
+    B('bb-legumes-semoule', 'Purée de légumes & semoule (soir)', 'legumes', 6, 'maison', ['legumes'],
+      [['carotte', 80], ['courgette', 80], ['semoule', 10], ['huile-colza', null]], 'Légumes vapeur mixés, ajouter 1 c. à soupe de semoule fine cuite.'),
+    B('bb-carotte-poulet', 'Purée carotte & poulet', 'legumes', 6, 'maison', ['legumes', 'volaille'],
+      [['carotte', 150], ['poulet-filet', 10], ['huile-colza', null]], 'Poulet cuit à la vapeur avec les carottes, mixer ensemble. 10 g de viande vers 6-8 mois, 15-20 g vers 1 an.'),
+    B('bb-courgette-cabillaud', 'Purée courgette, pomme de terre & cabillaud', 'legumes', 6, 'maison', ['legumes', 'poisson'],
+      [['courgette', 120], ['pdt', 40], ['cabillaud', 10], ['huile-colza', null]], 'Poisson vapeur 8 min, vérifier les arêtes, mixer avec les légumes.'),
+    B('bb-patate-douce-boeuf', 'Purée patate douce & bœuf', 'legumes', 6, 'maison', ['legumes', 'viande-rouge'],
+      [['patate-douce', 140], ['boeuf-hache', 10], ['huile-colza', null]], 'Bœuf haché bien cuit, mixé avec la purée.'),
+    B('bb-epinards-saumon', 'Purée épinards, pomme de terre & saumon', 'legumes', 8, 'maison', ['legumes', 'poisson-gras'],
+      [['epinards', 70], ['pdt', 70], ['saumon', 10], ['huile-colza', null]], 'Saumon vapeur 8 min, sans arêtes, mixé.'),
+    B('bb-lentilles-carotte', 'Purée lentilles corail & carotte', 'legumes', 10, 'maison', ['legumes', 'legumineuses'],
+      [['lentilles-corail', 20], ['carotte', 120], ['huile-colza', null]], 'Lentilles rincées cuites 15 min avec les carottes, mixer.'),
+    B('bb-compote-pomme', 'Compote de pomme', 'fruit', 4, 'maison', [],
+      [['pomme', 1]], 'Pomme épluchée en dés, 10 min à feu doux avec un fond d’eau (ou Thermomix 12 min / 100 °C / vitesse 1), mixer. Sans sucre.'),
+    B('bb-compote-poire', 'Compote de poire', 'fruit', 4, 'maison', [],
+      [['poire', 1]], 'Poire bien mûre en dés, 8 min à feu doux, mixer. Sans sucre.'),
+    B('bb-pomme-banane', 'Compote pomme-banane', 'fruit', 6, 'maison', [],
+      [['pomme', 0.5], ['banane', 0.5]], 'Pomme cuite mixée avec la banane crue.'),
+    B('bb-banane', 'Banane écrasée', 'fruit', 6, 'maison', [],
+      [['banane', 0.5]], 'Banane bien mûre écrasée à la fourchette, au dernier moment.'),
+    B('bb-pomme-fruits-rouges', 'Compote pomme & fruits rouges', 'fruit', 8, 'maison', [],
+      [['pomme', 1], ['fruits-rouges', 30]], 'Cuire ensemble 10 min, mixer puis passer au tamis (petites graines).'),
+    B('bb-orchestra-legumes', 'Purée de légumes Orchestra', 'legumes', 4, 'orchestra', ['legumes'],
+      [['orchestra-puree-legumes', 1]], 'Pot acheté chez Orchestra : bien vérifier l’âge indiqué.'),
+    B('bb-orchestra-proteines', 'Purée légumes & viande ou poisson Orchestra', 'legumes', 6, 'orchestra', ['legumes'],
+      [['orchestra-puree-proteines', 1]], 'Pot acheté chez Orchestra : bien vérifier l’âge indiqué.'),
+    B('bb-orchestra-compote', 'Compote Orchestra', 'fruit', 4, 'orchestra', [],
+      [['orchestra-compote', 1]], 'Pot acheté chez Orchestra.'),
 
     // ---------- Douceurs ----------
     R('crepes', 'Crêpes', 'Douceurs',

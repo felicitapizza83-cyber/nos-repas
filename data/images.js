@@ -57,6 +57,7 @@ APP_DATA.images = {
     ['legume', 'legumes-four']
   ],
   parCategorie: {
+    'Bébé': 'soupe',
     'Plats': 'legumes-four', 'Pâtes & risottos': 'pates', 'Poisson': 'poisson-legumes',
     'Salades': 'salade', 'Douceurs': 'muffins'
   },
@@ -65,6 +66,7 @@ APP_DATA.images = {
 
 APP_DATA.imageRepas = function (r) {
   const I = APP_DATA.images;
+  if (r.categorie === 'Bébé') return `images/${r.moment === 'fruit' ? 'clafoutis' : 'soupe'}.jpg`;
   let nom = I.parRepas[r.id];
   if (!nom) {
     const n = String(r.nom).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');

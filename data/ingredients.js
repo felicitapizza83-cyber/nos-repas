@@ -9,7 +9,8 @@ window.APP_DATA = window.APP_DATA || {};
 APP_DATA.lieux = [
   { id: 'producteur', nom: 'Producteur', emoji: '🧺', rythme: 'hebdo' },
   { id: 'drive', nom: 'Drive', emoji: '🚗', rythme: 'hebdo' },
-  { id: 'fourche', nom: 'La Fourche', emoji: '🌾', rythme: 'mensuel' }
+  { id: 'fourche', nom: 'La Fourche', emoji: '🌾', rythme: 'mensuel' },
+  { id: 'orchestra', nom: 'Orchestra', emoji: '🍼', rythme: 'hebdo' }
 ];
 
 APP_DATA.rayons = [
@@ -173,7 +174,13 @@ APP_DATA.rayons = [
     ['lentilles-corail', 'Lentilles corail', EP, 'g', 500, 2.4],
     ['nouilles', 'Nouilles (riz ou blé complet)', EP, 'g', 400, 2.3],
     ['pain-pita', 'Pains pita', BO, 'pc', 4, 1.8],
-    ['pain-burger', 'Pains à burger complets', BO, 'pc', 4, 2.2]
+    ['pain-burger', 'Pains à burger complets', BO, 'pc', 4, 2.2],
+
+    // Bébé : purées achetées chez Orchestra (prix indicatifs, à corriger dans l'app)
+    ['orchestra-puree-legumes', 'Purée de légumes bébé (pot)', 'Bébé', 'pc', 1, 1.9],
+    ['orchestra-puree-proteines', 'Purée légumes & viande ou poisson bébé (pot)', 'Bébé', 'pc', 1, 2.3],
+    ['orchestra-compote', 'Compote de fruits bébé (pot)', 'Bébé', 'pc', 1, 1.3],
+    ['huile-colza', 'Huile de colza (purées de bébé)', PL, 'ml', 500, 2.6, true]
   ];
 
   /* Lieu d'achat par défaut (modifiable dans l'app, écran « Ingrédients & prix ») :
@@ -185,7 +192,8 @@ APP_DATA.rayons = [
     'olives', 'capres', 'lait-coco', 'tomate-concassee', 'pois-chiches', 'haricots-blancs', 'haricots-rouges', 'mais',
     'semoule', 'quinoa', 'boulgour', 'lentilles-corail', 'nouilles']);
   const lieuPar = (id, rayon) =>
-    rayon === FL ? 'producteur'
+    rayon === 'Bébé' ? 'orchestra'
+      : rayon === FL ? 'producteur'
       : (rayon === PL || FOURCHE_EPICERIE.has(id)) ? 'fourche'
       : 'drive';
 
@@ -213,7 +221,8 @@ APP_DATA.rayons = [
     'navet': 20, 'patate-douce': 85, 'chou-fleur': 250, 'poireau': 30, 'dinde': 105, 'boeuf-braiser': 150,
     'cabillaud': 80, 'fromage-chevre': 300, 'ricotta': 150, 'emmental': 380, 'tofu': 130, 'pate-brisee': 990,
     'pate-pizza': 700, 'galette-sarrasin': 120, 'semoule': 350, 'quinoa': 370, 'boulgour': 350,
-    'lentilles-corail': 340, 'nouilles': 360, 'pain-pita': 170, 'pain-burger': 150
+    'lentilles-corail': 340, 'nouilles': 360, 'pain-pita': 170, 'pain-burger': 150,
+    'orchestra-puree-legumes': 60, 'orchestra-puree-proteines': 90, 'orchestra-compote': 70, 'huile-colza': 900
   };
 
   /* Stock minimum (Garde-manger) : en dessous, le produit s'ajoute tout seul aux courses
