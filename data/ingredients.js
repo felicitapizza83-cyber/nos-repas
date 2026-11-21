@@ -15,24 +15,26 @@ APP_DATA.lieux = [
 ];
 
 /* Essentiels de la maison : à vérifier une fois par semaine (on les oublie souvent).
-   « auto: 'eau' » = quantité calculée selon les litres bus par jour (Réglages). */
+   unite : ce qu'on compte à la maison · pack : combien d'unités dans ce qu'on achète (prix = prix du pack)
+   parSemaine : consommation habituelle du foyer, modifiable dans l'app.
+   « auto: 'eau' » = consommation calculée selon les litres bus par jour (Réglages). */
 APP_DATA.essentiels = [
-  { id: 'eau', nom: 'Eau (pack 6 × 1,5 L)', emoji: '💧', prix: 2.5, lieu: 'drive', auto: 'eau' },
-  { id: 'papier-toilette', nom: 'Papier toilette', emoji: '🧻', prix: 4.5, lieu: 'drive' },
-  { id: 'essuie-tout', nom: 'Essuie-tout (Sopalin)', emoji: '🧽', prix: 2.8, lieu: 'drive' },
-  { id: 'sacs-poubelle', nom: 'Sacs poubelle', emoji: '🗑️', prix: 3.0, lieu: 'drive' },
-  { id: 'mouchoirs', nom: 'Mouchoirs', emoji: '🤧', prix: 2.0, lieu: 'drive' },
-  { id: 'liquide-vaisselle', nom: 'Liquide vaisselle', emoji: '🍽️', prix: 1.8, lieu: 'drive' },
-  { id: 'lave-vaisselle', nom: 'Pastilles lave-vaisselle', emoji: '✨', prix: 6.5, lieu: 'drive' },
-  { id: 'lessive', nom: 'Lessive', emoji: '👕', prix: 8.0, lieu: 'drive' },
-  { id: 'eponges', nom: 'Éponges', emoji: '🧼', prix: 1.5, lieu: 'drive' },
-  { id: 'menage', nom: 'Produit ménager', emoji: '🧴', prix: 2.5, lieu: 'drive' },
-  { id: 'alu-film', nom: 'Papier alu / film / sacs congélation', emoji: '📦', prix: 2.5, lieu: 'drive' },
-  { id: 'gel-douche', nom: 'Gel douche / savon', emoji: '🚿', prix: 2.5, lieu: 'drive' },
-  { id: 'dentifrice', nom: 'Dentifrice', emoji: '🪥', prix: 2.0, lieu: 'drive' },
-  { id: 'shampoing', nom: 'Shampoing', emoji: '💆', prix: 3.0, lieu: 'drive' },
-  { id: 'couches', nom: 'Couches bébé', emoji: '👶', prix: 12.0, lieu: 'drive' },
-  { id: 'lingettes', nom: 'Lingettes / liniment bébé', emoji: '🍼', prix: 3.0, lieu: 'drive' }
+  { id: 'eau', nom: 'Eau', emoji: '💧', unite: 'bouteille de 1,5 L', pack: 6, parSemaine: 19, prix: 2.5, lieu: 'drive', auto: 'eau' },
+  { id: 'papier-toilette', nom: 'Papier toilette', emoji: '🧻', unite: 'rouleau', pack: 12, parSemaine: 4, prix: 4.5, lieu: 'drive' },
+  { id: 'essuie-tout', nom: 'Essuie-tout (Sopalin)', emoji: '🧽', unite: 'rouleau', pack: 3, parSemaine: 1, prix: 2.8, lieu: 'drive' },
+  { id: 'sacs-poubelle', nom: 'Sacs poubelle', emoji: '🗑️', unite: 'sac', pack: 20, parSemaine: 4, prix: 3.0, lieu: 'drive' },
+  { id: 'mouchoirs', nom: 'Mouchoirs', emoji: '🤧', unite: 'boîte', pack: 1, parSemaine: 1, prix: 2.0, lieu: 'drive' },
+  { id: 'liquide-vaisselle', nom: 'Liquide vaisselle', emoji: '🍽️', unite: 'flacon', pack: 1, parSemaine: 0.5, prix: 1.8, lieu: 'drive' },
+  { id: 'lave-vaisselle', nom: 'Pastilles lave-vaisselle', emoji: '✨', unite: 'pastille', pack: 40, parSemaine: 7, prix: 6.5, lieu: 'drive' },
+  { id: 'lessive', nom: 'Lessive', emoji: '👕', unite: 'dose', pack: 30, parSemaine: 5, prix: 8.0, lieu: 'drive' },
+  { id: 'eponges', nom: 'Éponges', emoji: '🧼', unite: 'éponge', pack: 3, parSemaine: 1, prix: 1.5, lieu: 'drive' },
+  { id: 'menage', nom: 'Produit ménager', emoji: '🧴', unite: 'flacon', pack: 1, parSemaine: 0.25, prix: 2.5, lieu: 'drive' },
+  { id: 'alu-film', nom: 'Papier alu / film / sacs congélation', emoji: '📦', unite: 'rouleau', pack: 1, parSemaine: 0.25, prix: 2.5, lieu: 'drive' },
+  { id: 'gel-douche', nom: 'Gel douche / savon', emoji: '🚿', unite: 'flacon', pack: 1, parSemaine: 0.5, prix: 2.5, lieu: 'drive' },
+  { id: 'dentifrice', nom: 'Dentifrice', emoji: '🪥', unite: 'tube', pack: 1, parSemaine: 0.25, prix: 2.0, lieu: 'drive' },
+  { id: 'shampoing', nom: 'Shampoing', emoji: '💆', unite: 'flacon', pack: 1, parSemaine: 0.25, prix: 3.0, lieu: 'drive' },
+  { id: 'couches', nom: 'Couches bébé', emoji: '👶', unite: 'couche', pack: 44, parSemaine: 42, prix: 12.0, lieu: 'drive' },
+  { id: 'lingettes', nom: 'Lingettes / liniment bébé', emoji: '🍼', unite: 'paquet', pack: 1, parSemaine: 1, prix: 3.0, lieu: 'drive' }
 ];
 
 APP_DATA.rayons = [
