@@ -1,8 +1,8 @@
 /* Intelligence artificielle (Gemini, via Firebase AI Logic, formule gratuite).
    - Photo / texte / lien → recette (puis la fiche de vérification habituelle).
-   - Phrase libre de l'accueil → consigne ou envie (seulement si l'app ne l'a pas comprise seule).
+   - Phrase libre de l'accueil → vraie discussion : l'IA répond à tout, puis propose (menu, recette, consigne) ; rien ne change sans accord.
    - Idées de recettes avec ce qu'il reste au garde-manger, ou de saison pour l'objectif.
-   Confidentialité : on n'envoie que la photo, le texte ou la phrase concernés (jamais noms, e-mails, pesées, budget).
+   Confidentialité : on envoie la question, le menu prévu et les noms des recettes (jamais noms, e-mails, pesées, budget).
    Réservé aux téléphones connectés à la synchronisation ; sans réseau ou au-delà du quota, l'app continue sans IA. */
 App.ia = {
   /** Modèles essayés dans l'ordre (les anciens sont retirés par Google au fil du temps). */
@@ -29,7 +29,7 @@ App.ia = {
   },
 
   /** Envoie la demande à Gemini et renvoie le JSON de la réponse. */
-  async demander(parts, { vision = false, outils = null } = {}) {
+  async demander(parts, { vision = false, outils = null, temperature = 0.3 } = {}) {
     if (!App.ia.dispo()) throw new Error(App.ia.raison());
     await App.ia.charger();
     const modeles = vision ? App.ia.MODELES_VISION : App.ia.MODELES_RAPIDES;
@@ -38,7 +38,7 @@ App.ia = {
       try {
         const opts = { model: nom };
         if (outils) opts.tools = outils;
-        else opts.generationConfig = { responseMimeType: 'application/json', temperature: 0.3 };
+        else opts.generationConfig = { responseMimeType: 'application/json', temperature };
         const modele = App.ia.mod.getGenerativeModel(App.ia.ai, opts);
         const rep = await Promise.race([
           modele.generateContent(parts),
@@ -178,6 +178,179 @@ ${repas}`]);
       porteeTexte: (mm.length === 1 ? (mm[0] === 'soir' ? 'les soirs · ' : 'les midis · ') : '') + quand,
       resumeIA: r.resume || '', ia: true
     };
+  },
+
+  // ---------- Discussion libre (phrase de l'accueil) ----------
+  /** Le menu des deux semaines à venir, en clair, pour que l'IA sache ce qui est déjà prévu. */
+  contexteMenu(state) {
+    const lignes = [];
+    const k0 = App.store.semaineDuJour();
+    [k0, App.u.addWeeks(k0, 1)].forEach(k => {
+      const sem = state.semaines[k];
+      App.JOURS.forEach((j, i) => {
+        const d = App.u.parseKey(k); d.setDate(d.getDate() + i);
+        ['midi', 'soir'].forEach(m => {
+          if (m === 'midi' && !state.settings.midis) return;
+          const s = sem && sem.slots[`${j.id}-${m}`];
+          const r = s && s.repasId && App.store.repas(s.repasId);
+          const txt = !s ? 'libre' : s.type === 'ext' ? 'repas dehors' : s.type === 'restes' ? 'restes'
+            : r ? r.nom + (s.personnes ? ` (${s.personnes} pers.)` : '') : 'à choisir';
+          lignes.push(`${App.u.key(d)} ${j.nom.toLowerCase()} ${m} : ${txt}`);
+        });
+      });
+    });
+    return lignes.join('\n');
+  },
+
+  /** Conversation → { reponse, propositions } (l'IA répond librement puis propose, sans rien changer elle-même). */
+  async discuter(messages, state) {
+    const repas = state.repas.filter(r => r.categorie !== 'Bébé').map(r => `${r.id}|${r.nom}`).join('\n');
+    const regimes = App.consignes.REGIMES.map(r => r.id).join(', ');
+    const etats = App.consignes.ETATS.map(e => e.id).join(', ');
+    const tags = Object.keys(window.APP_DATA.tags).filter(t => t !== 'bebe').join(', ');
+    const auj = new Date();
+    const conv = messages.slice(-10).map(m => `${m.role === 'user' ? 'FAMILLE' : 'TOI'} : ${m.texte}`).join('\n');
+    return App.ia.demander([`Tu es l'assistant de « Cook Easy », l'application de repas d'une famille : ${state.settings.portions || 2} adultes et un bébé.
+Tu réponds comme un véritable assistant IA, chaleureux, précis et utile, à TOUTES les questions : cuisine, recettes, quantités pour des invités, organisation d'une soirée, nutrition, santé, grossesse, bébé, courses, budget, ou même sans rapport avec les repas.
+Réponds d'abord vraiment à la question posée, avec des détails concrets (quantités, astuces, étapes). Ne ramène pas la conversation vers les recettes de la famille si ce n'est pas demandé.
+Santé : donne des conseils généraux utiles ; si cela semble sérieux, conseille de consulter un médecin.
+La famille mange halal (pas de porc, pas d'alcool dans les plats).
+Aujourd'hui : ${auj.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} (${App.u.key(auj)}).
+
+Menu déjà prévu (date jour moment : plat) :
+${App.ia.contexteMenu(state)}
+
+Recettes enregistrées par la famille (id|nom) :
+${repas}
+
+Conversation :
+${conv}
+
+Réponds uniquement en JSON :
+{"reponse": "ta réponse en français ; tirets et retours à la ligne autorisés ; **gras** possible",
+ "propositions": [0 à 3 actions facultatives, seulement si elles aident vraiment ; la famille choisira de les accepter ou non]}
+Formes possibles d'une action :
+- {"type":"placer","libelle":"texte du bouton, ex. Mettre la raclette au menu samedi soir (10 pers.)","date":"AAAA-MM-JJ","moment":"midi"|"soir","recette":"id de la liste" ou null,"nouvelle":RECETTE ou null,"personnes":nombre ou null}
+- {"type":"recette","libelle":"Ajouter … à mes recettes","nouvelle":RECETTE}
+- {"type":"consigne","libelle":"…","regimes":[parmi ${regimes}],"etats":[parmi ${etats}],"exclure":["ingrédients à éviter"],"favoriser_tags":[parmi ${tags}],"moments":["midi","soir"],"jours":["lun","mar","mer","jeu","ven","sam","dim"] ou null,"nb_jours":nombre ou null,"recettes":[ids de la liste],"resume":"8 mots maximum"}
+RECETTE = {"titre":"…","portions":nombre,"ingredients":[{"quantite":nombre ou null,"unite":"g|kg|ml|cl|l|c. à s.|c. à c.|pincée|boîte|gousse|botte|tranche|sachet|","nom":"…"}],"etapes":["…"]}, quantités pour ce nombre de portions.
+Règles des actions : tu ne modifies jamais le menu toi-même. « placer » : utilise une recette de la liste seulement si c'est vraiment le même plat, sinon donne « nouvelle ». « personnes » : nombre total de convives si ce n'est pas la famille seule. La date doit être aujourd'hui ou plus tard (« samedi » = le prochain samedi). « consigne » : seulement pour une règle sur plusieurs repas (régime, état de santé, aliment à éviter…).`],
+    { vision: true, temperature: 0.6 });
+  },
+
+  /** Crée une recette proposée par l'IA (ingrédients reliés à la liste de courses) et renvoie son id. */
+  creerRecette(nouvelle) {
+    const st = App.store.state;
+    const a = App.importer.analyser(App.ia.versTexte(nouvelle), st);
+    if (!a.lignes.length) throw new Error('Recette incomplète');
+    const { nouveaux, repas } = App.importer.brouillon(a, st);
+    const id = App.u.uid();
+    App.store.update(s => {
+      s.ingredients.push(...nouveaux);
+      s.repas.push({ id, favori: false, avis: null, commentaire: '', ...repas, ia: true });
+    });
+    return id;
+  },
+
+  /** Accepte une proposition de l'IA. Renvoie un court compte rendu. */
+  accepter(p) {
+    const st = App.store.state;
+    if (p.type === 'recette') {
+      App.importUI.depuisTexte(App.ia.versTexte(p.nouvelle), true);
+      return 'Recette ouverte pour vérification';
+    }
+    if (p.type === 'consigne') {
+      const c = App.ia.versConsigne({ ...p, type: 'consigne', placements: [] }, st);
+      if (!c) throw new Error('Consigne incomprise');
+      let bilan = null;
+      App.store.update(s => {
+        const sem = App.store.semaine();
+        const e = { id: App.u.uid(), texte: p.resume || p.libelle || 'Consigne de l’IA', date: Date.now(), consigne: c };
+        sem.envies.push(e);
+        App.consignes.casesFixes(s, e);
+        bilan = App.consignes.appliquer(s, sem, e);
+      });
+      return `Consigne appliquée : ${bilan.changes.length} repas changé${bilan.changes.length > 1 ? 's' : ''}`;
+    }
+    if (p.type === 'placer') {
+      const d = /^\d{4}-\d{2}-\d{2}$/.test(p.date || '') ? App.u.parseKey(p.date) : new Date();
+      const k = App.u.mondayOf(d);
+      if (k < App.store.debut()) throw new Error('Cette date est avant le début du suivi');
+      const jour = App.JOURS[(d.getDay() + 6) % 7];
+      const moment = p.moment === 'midi' && st.settings.midis ? 'midi' : 'soir';
+      let id = p.recette && App.store.repas(p.recette) ? p.recette : null;
+      if (!id && p.nouvelle) id = App.ia.creerRecette(p.nouvelle);
+      if (!id) throw new Error('Recette introuvable');
+      const pers = Math.round(+p.personnes || 0);
+      App.store.update(s => {
+        const sem = App.store.semaine(k);
+        const slotId = `${jour.id}-${moment}`;
+        App.stock.annulerConso(s, sem.slots[slotId]);
+        sem.slots[slotId] = { type: 'maison', repasId: id, source: 'manuel', ...(pers > 0 && pers !== s.settings.portions ? { personnes: pers } : {}) };
+      });
+      return `Au menu ${jour.nom.toLowerCase()} ${d.getDate()} ${moment}${pers > 0 ? ` · ${pers} pers.` : ''} (courses mises à jour)`;
+    }
+    throw new Error('Action inconnue');
+  },
+
+  /** Petite mise en forme du texte de l'IA (sans HTML venant de l'IA). */
+  formater(t) {
+    return App.u.esc(String(t || '')).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+  },
+
+  /** Ouvre la discussion avec une première question. */
+  ouvrirDiscussion(texte) {
+    const conv = [{ role: 'user', texte }];
+    const ov = App.ui.sheet(`<h2>✨ Assistant</h2>
+      <div class="ia-fil"></div>
+      <form class="envie-form ia-suite" data-action="suite">
+        <input name="q" placeholder="Poser une autre question…" autocomplete="off" enterkeyhint="send"/>
+        <button class="btn btn-primary" type="submit" aria-label="Envoyer">➤</button>
+      </form>`, async (action, el) => {
+      if (action === 'suite') {
+        const q = el.q.value.trim();
+        if (!q || ov.dataset.attente) return;
+        el.q.value = '';
+        conv.push({ role: 'user', texte: q });
+        await tour();
+      }
+      if (action === 'prop') {
+        const m = conv[+el.dataset.m], p = m && m.props[+el.dataset.p];
+        if (!p || m.faits[el.dataset.p]) return;
+        try {
+          const msg = App.ia.accepter(p);
+          m.faits[el.dataset.p] = msg;
+          if (p.type === 'recette') return;   // la fiche de vérification a pris la place
+          App.ui.haptique && App.ui.haptique();
+          dessiner();
+        } catch (err) { App.ui.toast(err.message); }
+      }
+    });
+    const fil = ov.querySelector('.ia-fil');
+    const dessiner = () => {
+      fil.innerHTML = conv.map((m, i) => m.role === 'user'
+        ? `<div class="ia-bulle moi">${App.u.esc(m.texte)}</div>`
+        : `<div class="ia-bulle ia">${App.ia.formater(m.texte)}
+            ${(m.props || []).length ? `<div class="ia-props">${m.props.map((p, j) => m.faits[j]
+              ? `<div class="ia-fait">✓ ${App.u.esc(m.faits[j])}</div>`
+              : `<button class="btn ${j === 0 ? 'btn-primary' : ''} block" data-action="prop" data-m="${i}" data-p="${j}">${App.u.esc(p.libelle || 'Accepter')}</button>`).join('')}
+              <small class="muted">Rien n’est changé tant que vous ne touchez pas un bouton.</small></div>` : ''}
+          </div>`).join('') + (ov.dataset.attente ? '<div class="ia-attente"><span class="ia-points"></span> Gemini réfléchit…</div>' : '');
+      fil.lastElementChild && fil.lastElementChild.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    };
+    const tour = async () => {
+      ov.dataset.attente = '1'; dessiner();
+      try {
+        const r = await App.ia.discuter(conv, App.store.state);
+        const props = (r.propositions || []).filter(p => p && ['placer', 'recette', 'consigne'].includes(p.type)
+          && (p.type !== 'recette' || p.nouvelle) && (p.type !== 'placer' || p.recette || p.nouvelle)).slice(0, 3);
+        conv.push({ role: 'ia', texte: r.reponse || '…', props, faits: {} });
+      } catch (e) {
+        conv.push({ role: 'ia', texte: e.message, props: [], faits: {} });
+      }
+      delete ov.dataset.attente; dessiner();
+    };
+    tour();
   },
 
   // ---------- Idées de recettes ----------
