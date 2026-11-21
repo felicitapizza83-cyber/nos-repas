@@ -1,6 +1,6 @@
 /* Écran d'accueil : la question de la semaine, les envies de chacun, et un résumé. */
 App.views.accueil = {
-  title: 'Nos repas',
+  title: 'Cook Easy',
 
   QUESTIONS: [
     'Qu’est-ce qui vous ferait plaisir cette semaine ?',

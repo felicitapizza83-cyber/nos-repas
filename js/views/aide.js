@@ -70,9 +70,9 @@ App.views.aide = {
         App.router.render(true);
       }
       if (a.dataset.action === 'partager') {
-        const txt = 'Nos repas — idées et soucis\n\n' + App.views.aide.lire().map(x => `${x.type} : ${x.texte}`).join('\n');
+        const txt = 'Cook Easy — idées et soucis\n\n' + App.views.aide.lire().map(x => `${x.type} : ${x.texte}`).join('\n');
         try {
-          if (navigator.share) await navigator.share({ title: 'Nos repas — retours', text: txt });
+          if (navigator.share) await navigator.share({ title: 'Cook Easy — retours', text: txt });
           else { await navigator.clipboard.writeText(txt); App.ui.toast('Liste copiée'); }
         } catch (err) { /* annulé */ }
       }

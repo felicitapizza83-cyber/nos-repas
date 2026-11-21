@@ -115,9 +115,9 @@ App.views.reglages = {
 
   async exporter() {
     const json = App.store.exportJSON();
-    const file = new File([json], `nos-repas-${App.u.key(new Date())}.json`, { type: 'application/json' });
+    const file = new File([json], `cook-easy-${App.u.key(new Date())}.json`, { type: 'application/json' });
     try {
-      if (navigator.canShare && navigator.canShare({ files: [file] })) await navigator.share({ files: [file], title: 'Nos repas' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) await navigator.share({ files: [file], title: 'Cook Easy' });
       else {
         const url = URL.createObjectURL(file);
         const link = Object.assign(document.createElement('a'), { href: url, download: file.name });
