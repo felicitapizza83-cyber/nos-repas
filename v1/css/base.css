@@ -1,0 +1,204 @@
+/* Thème : polices, couleurs au choix (data-couleur), modes clair / sombre / auto (data-theme),
+   mise en page générale, barre d'onglets (téléphone) et menu latéral (tablette, ordinateur). */
+
+/* ---------- Polices (licence libre SIL OFL, voir fonts/LICENCE.md) ---------- */
+@font-face {
+  font-family: 'Jost'; font-style: normal; font-weight: 400 700; font-display: swap;
+  src: url(../../fonts/jost-latin.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'Fraunces'; font-style: normal; font-weight: 600 800; font-display: swap;
+  src: url(../../fonts/fraunces-latin.woff2) format('woff2');
+}
+
+/* ---------- Palettes : chaque couleur a une version claire (-l) et sombre (-d) ---------- */
+:root, :root[data-couleur="orange"] {
+  --p-l: #ef7d16; --ps-l: #fde8d4; --pi-l: #ffffff;
+  --p-d: #ff9b42; --ps-d: #3b2616; --pi-d: #1f1408;
+}
+:root[data-couleur="sauge"] {
+  --p-l: #4f7a5a; --ps-l: #e1ebe3; --pi-l: #ffffff;
+  --p-d: #8cc49a; --ps-d: #1f3326; --pi-d: #10231a;
+}
+:root[data-couleur="framboise"] {
+  --p-l: #d2386a; --ps-l: #fbe0e9; --pi-l: #ffffff;
+  --p-d: #ff7ea6; --ps-d: #3d1b27; --pi-d: #2a0b16;
+}
+:root[data-couleur="ocean"] {
+  --p-l: #1b7f93; --ps-l: #d8eff3; --pi-l: #ffffff;
+  --p-d: #5fc9dc; --ps-d: #13303a; --pi-d: #06242c;
+}
+:root[data-couleur="lavande"] {
+  --p-l: #7657c6; --ps-l: #ebe5fb; --pi-l: #ffffff;
+  --p-d: #b6a0f5; --ps-d: #2a2342; --pi-d: #1a1233;
+}
+:root[data-couleur="moutarde"] {
+  --p-l: #b88a00; --ps-l: #faefcc; --pi-l: #1f1b1a;
+  --p-d: #f2c94c; --ps-d: #3a3113; --pi-d: #1f1b1a;
+}
+
+/* ---------- Mode clair (par défaut) ---------- */
+:root {
+  --bg: #f6f2ed;
+  --surface: #ffffff;
+  --surface-2: #f1ece6;
+  --text: #1f1b1a;
+  --muted: #6e6764;
+  --line: #e6e0da;
+  --primary: var(--p-l);
+  --primary-soft: var(--ps-l);
+  --primary-ink: var(--pi-l);
+  --accent: var(--p-l);
+  --accent-soft: var(--ps-l);
+  --danger: #c23b33;
+  --danger-soft: #f8dfdc;
+  --ok: #2f8a4e;
+  --shadow: 0 1px 2px rgba(31, 27, 26, .05), 0 8px 24px rgba(31, 27, 26, .06);
+  --shadow-lg: 0 10px 40px rgba(31, 27, 26, .14);
+  --radius: 20px;
+  --tabbar-h: 64px;
+  --sidebar-w: 248px;
+  --font: 'Jost', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-titre: 'Fraunces', Georgia, 'Times New Roman', serif;
+  color-scheme: light;
+}
+
+/* ---------- Mode sombre : automatique (réglage du téléphone) ou forcé ---------- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #141211; --surface: #1e1b1a; --surface-2: #292524; --text: #f4efeb; --muted: #aaa29d; --line: #36302e;
+    --primary: var(--p-d); --primary-soft: var(--ps-d); --primary-ink: var(--pi-d);
+    --accent: var(--p-d); --accent-soft: var(--ps-d);
+    --danger: #f0837a; --danger-soft: #3c2220; --ok: #7fd39a;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .35); --shadow-lg: 0 10px 40px rgba(0, 0, 0, .5);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #141211; --surface: #1e1b1a; --surface-2: #292524; --text: #f4efeb; --muted: #aaa29d; --line: #36302e;
+  --primary: var(--p-d); --primary-soft: var(--ps-d); --primary-ink: var(--pi-d);
+  --accent: var(--p-d); --accent-soft: var(--ps-d);
+  --danger: #f0837a; --danger-soft: #3c2220; --ok: #7fd39a;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .35); --shadow-lg: 0 10px 40px rgba(0, 0, 0, .5);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 16.5px/1.45 var(--font);
+  min-height: 100vh;
+  overscroll-behavior-y: none;
+  transition: background-color .25s;
+}
+body.no-scroll { overflow: hidden; }
+
+h1, h2 { font-family: var(--font-titre); font-weight: 700; letter-spacing: -.01em; }
+h1, h2, h3 { margin: 0; line-height: 1.2; }
+h2 { font-size: 1.35rem; }
+h3 { font-size: 1.05rem; font-weight: 600; }
+p { margin: .4rem 0; }
+small { font-size: .82rem; }
+a { color: var(--primary); }
+s { color: var(--muted); }
+
+/* ---------- En-tête ---------- */
+.topbar {
+  position: sticky; top: 0; z-index: 10;
+  padding: calc(env(safe-area-inset-top) + 12px) 16px 10px;
+  background: color-mix(in srgb, var(--bg) 85%, transparent);
+  backdrop-filter: saturate(1.6) blur(16px);
+  -webkit-backdrop-filter: saturate(1.6) blur(16px);
+}
+.topbar-in { max-width: 640px; margin: 0 auto; display: flex; align-items: flex-end; gap: 10px; }
+.topbar-titre { flex: 1; min-width: 0; }
+.topbar h1 { font-size: 2rem; line-height: 1.1; }
+.back { display: inline-block; font-weight: 600; text-decoration: none; margin-bottom: 4px; }
+.back[hidden] { display: none; }
+.btn-apparence {
+  width: 40px; height: 40px; border-radius: 50%; border: none; flex: none; cursor: pointer;
+  background: var(--surface); box-shadow: var(--shadow); color: var(--primary);
+  display: grid; place-items: center;
+}
+.btn-apparence svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+.view {
+  max-width: 640px; margin: 0 auto;
+  padding: 4px 16px calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 40px);
+}
+
+/* ---------- Barre d'onglets flottante (téléphone) ---------- */
+.tabbar {
+  position: fixed; z-index: 20;
+  left: 12px; right: 12px; bottom: calc(env(safe-area-inset-bottom) + 10px);
+  max-width: 560px; margin: 0 auto;
+  height: var(--tabbar-h);
+  display: grid; grid-template-columns: repeat(6, 1fr); align-items: center;
+  padding: 6px;
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  backdrop-filter: saturate(1.6) blur(20px); -webkit-backdrop-filter: saturate(1.6) blur(20px);
+  border: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
+  border-radius: 26px;
+  box-shadow: var(--shadow-lg);
+}
+.nav-brand { display: none; }
+.tabbar a {
+  position: relative; height: 100%;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  color: var(--muted); text-decoration: none; font-size: .66rem; font-weight: 600; letter-spacing: .01em;
+  border-radius: 20px; transition: color .2s, background-color .2s;
+}
+.tabbar svg {
+  width: 24px; height: 24px; fill: none; stroke: currentColor;
+  stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; transition: transform .2s;
+}
+.tabbar a.active { color: var(--primary); background: var(--primary-soft); }
+.tabbar a.active svg { stroke-width: 2.2; transform: translateY(-1px); }
+.tabbar a:active svg { transform: scale(.9); }
+
+/* ---------- Menu latéral (tablette en paysage, ordinateur) ---------- */
+@media (min-width: 900px) {
+  .tabbar {
+    left: 0; right: auto; top: 0; bottom: 0; margin: 0;
+    width: var(--sidebar-w); height: auto; max-width: none;
+    display: flex; flex-direction: column; align-items: stretch; gap: 4px;
+    padding: calc(env(safe-area-inset-top) + 22px) 14px 22px;
+    border-radius: 0; border: none; border-right: 1px solid var(--line);
+    box-shadow: none; background: var(--surface);
+  }
+  .nav-brand {
+    display: flex; align-items: center; gap: 10px; padding: 4px 10px 22px;
+    font-family: var(--font-titre); font-weight: 700; font-size: 1.35rem; color: var(--text);
+  }
+  .nav-brand img { width: 36px; height: 36px; border-radius: 10px; }
+  .tabbar a {
+    flex-direction: row; justify-content: flex-start; gap: 14px;
+    height: 48px; padding: 0 14px; font-size: .98rem; font-weight: 500; border-radius: 14px;
+  }
+  .tabbar a:hover { background: var(--surface-2); color: var(--text); }
+  .tabbar a.active, .tabbar a.active:hover { background: var(--primary); color: var(--primary-ink); }
+  body { padding-left: var(--sidebar-w); }
+  .view { padding-bottom: 48px; }
+  .topbar-in, .view { max-width: 720px; }
+  .fab { bottom: 28px !important; right: 32px !important; }
+  .toast { bottom: 28px !important; left: calc(50% + var(--sidebar-w) / 2) !important; }
+  .sticky-bottom { bottom: 12px !important; }
+}
+
+/* Utilitaires */
+.muted { color: var(--muted); }
+.small { font-size: .86rem; }
+.center { text-align: center; display: block; margin-left: auto; margin-right: auto; }
+.grow { flex: 1; min-width: 0; }
+.hidden { display: none !important; }
+.row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+.row-between { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.stack { display: flex; flex-direction: column; gap: 12px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.plain { list-style: none; margin: 0; padding: 0; }
+.ok { color: var(--ok); font-weight: 600; }
+.danger { color: var(--danger); font-weight: 600; }
+.empty { text-align: center; color: var(--muted); padding: 2rem 0; }
