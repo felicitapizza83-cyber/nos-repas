@@ -80,19 +80,24 @@ App.views.courses = {
           <ul class="card list">${trier(r.items).map(ligne).join('')}</ul>`).join('')}
         ${placard.length && !V.magasin ? `<h3 class="section-title">À vérifier dans les placards</h3>
           <ul class="card list">${placard.map(ligne).join('')}</ul>` : ''}
-        ${L.maison.length ? `<h3 class="section-title">🧻 Maison</h3><ul class="card list">${trier(L.maison).map(ligneEss).join('')}</ul>` : ''}
+        ${Object.entries(App.shopping.GROUPES).map(([g, G]) => {
+          const its = L.maison.filter(e => e.groupe === g);
+          return its.length ? `<h3 class="section-title">${G.emoji} ${G.nom}</h3><ul class="card list">${trier(its).map(ligneEss).join('')}</ul>` : '';
+        }).join('')}
         ${L.ajouts.length ? `<h3 class="section-title">En plus</h3><ul class="card list">${trier(L.ajouts).map(ligneAjout).join('')}</ul>` : ''}
       </section>`;
     };
 
     const vide = App.shopping.LIEUX.every(x => !l.lieux[x].rayons.length && !l.lieux[x].ajouts.length && !l.lieux[x].maison.length) && !l.fourche.length;
-    const aVerifier = (state.essentiels || []).filter(e => (sem.courses.maison || {})[e.id] == null).length;
+    const reste = g => (state.essentiels || []).filter(e => App.shopping.groupe(e) === g && (sem.courses.maison || {})[e.id] == null).length;
+    const aVerifier = reste('desserts') + reste('maison');
     const onglets = `
       <div class="who segment courses-onglets">
         <button class="seg ${V.onglet === 'repas' ? 'on' : ''}" data-action="onglet" data-v="repas">🥕 Repas</button>
-        <button class="seg ${V.onglet === 'maison' ? 'on' : ''}" data-action="onglet" data-v="maison">🧻 Maison${aVerifier ? ` <span class="d-badge">${aVerifier}</span>` : ''}</button>
+        ${Object.entries(App.shopping.GROUPES).map(([g, G]) => `
+          <button class="seg ${V.onglet === g ? 'on' : ''}" data-action="onglet" data-v="${g}">${G.emoji} ${g === 'desserts' ? 'Desserts' : G.nom}${reste(g) ? ` <span class="d-badge">${reste(g)}</span>` : ''}</button>`).join('')}
       </div>`;
-    if (V.onglet === 'maison') return `${App.commun.weekNav(state.semaineActive)}${onglets}${V.vueMaison(state, sem)}`;
+    if (App.shopping.GROUPES[V.onglet]) return `${App.commun.weekNav(state.semaineActive)}${onglets}${V.vueMaison(state, sem, V.onglet)}`;
     if (vide) return `
       ${App.commun.weekNav(state.semaineActive)}${onglets}
       ${App.ui.vide('🛒', 'La liste se fait toute seule', 'Préparez le menu de la semaine : les ingrédients arrivent ici, rangés par lieu et par rayon, sans ce que vous avez déjà.',
@@ -101,7 +106,7 @@ App.views.courses = {
 
     return `
       ${App.commun.weekNav(state.semaineActive)}${onglets}
-      ${aVerifier ? `<button class="banner" data-action="onglet" data-v="maison">🧻 ${aVerifier} essentiel${aVerifier > 1 ? 's' : ''} de la maison à vérifier (eau, papier toilette…) ›</button>` : ''}
+      ${aVerifier ? `<button class="banner" data-action="onglet" data-v="${reste('desserts') ? 'desserts' : 'maison'}">✅ ${aVerifier} produit${aVerifier > 1 ? 's' : ''} à vérifier : ${[reste('desserts') ? 'desserts & fruits' : '', reste('maison') ? 'maison' : ''].filter(Boolean).join(' et ')} ›</button>` : ''}
       <section class="card courses-resume">
         <div class="row-between">
           <div><span class="gros">${euro(l.total)}</span><small class="muted"> de courses</small></div>
@@ -150,14 +155,15 @@ App.views.courses = {
     return [/[sxz]$/.test(premier) ? premier : /(eau|au|eu)$/.test(premier) ? premier + 'x' : premier + 's', ...reste].join(' ');
   },
 
-  /** Onglet « Maison » : on indique ce qu'on a, l'app calcule ce qu'il faut acheter pour la semaine. */
-  vueMaison(state, sem) {
+  /** Onglets « Desserts » et « Maison » : on indique ce qu'on a, l'app calcule ce qu'il faut acheter pour la semaine. */
+  vueMaison(state, sem, groupe = 'maison') {
     const { esc, euro } = App.u;
     const V = App.views.courses;
+    const G = App.shopping.GROUPES[groupe];
     const m = sem.courses.maison || {};
-    const liste = state.essentiels || [];
+    const liste = (state.essentiels || []).filter(e => App.shopping.groupe(e) === groupe);
     const faits = liste.filter(e => m[e.id] != null).length;
-    const ess = App.shopping.essentiels(sem, state);
+    const ess = App.shopping.essentiels(sem, state).filter(e => e.groupe === groupe);
     const total = ess.reduce((s, e) => s + e.cout, 0);
     const arrondi = x => Number.isInteger(x) ? x : x.toFixed(1).replace('.', ',');
     return `
@@ -167,8 +173,10 @@ App.views.courses = {
           <div class="muted">${ess.length ? `${ess.length} à acheter · <strong class="txt">${euro(total)}</strong>` : faits ? '<strong class="ok">Rien à acheter 👍</strong>' : ''}</div>
         </div>
         <div class="bar"><span style="width:${liste.length ? (faits / liste.length * 100).toFixed(1) : 0}%"></span></div>
-        <small class="muted">Indiquez ce que vous avez à la maison : l’app compare à ce que vous utilisez en une semaine et ajoute au drive seulement ce qui manque.</small>
-        ${faits < liste.length ? '<button class="btn block" data-action="maison-tout">✓ Pour le reste, on en a assez</button>' : ''}
+        <small class="muted">${groupe === 'desserts'
+          ? 'Desserts, fruits et en-cas de la semaine (pas dans le menu). Indiquez ce que vous avez : l’app ajoute aux courses seulement ce qui manque.'
+          : 'Indiquez ce que vous avez à la maison : l’app compare à ce que vous utilisez en une semaine et ajoute aux courses seulement ce qui manque.'}</small>
+        ${faits < liste.length ? `<button class="btn block" data-action="maison-tout" data-groupe="${groupe}">✓ Pour le reste, on en a assez</button>` : ''}
       </section>
       <ul class="card list essentiels">${liste.map(e => {
         const v = m[e.id];
@@ -197,15 +205,16 @@ App.views.courses = {
           ${resultat}
         </li>`;
       }).join('')}</ul>
-      <h3 class="section-title">Ajouter un essentiel</h3>
+      <h3 class="section-title">Ajouter ${groupe === 'desserts' ? 'un dessert ou un fruit' : 'un essentiel'}</h3>
       <section class="card">
         <form class="add-form" data-action="ess-ajout">
-          <input name="nom" placeholder="Piles, croquettes, ampoules…" autocomplete="off"/>
+          <input type="hidden" name="groupe" value="${groupe}"/>
+          <input name="nom" placeholder="${groupe === 'desserts' ? 'Kiwis, crème dessert, madeleines…' : 'Piles, croquettes, ampoules…'}" autocomplete="off"/>
           <input name="prix" inputmode="decimal" placeholder="€" class="prix"/>
           <select name="lieu" class="lieu-select"><option value="drive">Drive</option><option value="producteur">Producteur</option><option value="boucherie">Boucherie</option><option value="orchestra">Orchestra</option></select>
           <button class="btn btn-primary" type="submit" aria-label="Ajouter">＋</button>
         </form>
-        <small class="muted">Touchez un essentiel pour régler son unité, la taille du pack, la consommation par semaine et le prix. L’eau suit les litres bus par jour (Réglages).</small>
+        <small class="muted">Touchez un produit pour régler son unité, la taille du pack, la consommation par semaine, le prix et le lieu d’achat.${groupe === 'maison' ? ' L’eau suit les litres bus par jour (Réglages).' : ''}</small>
       </section>`;
   },
 
@@ -340,7 +349,8 @@ App.views.courses = {
       const f = e.target, nom = f.nom.value.trim();
       if (f.dataset.action === 'ess-ajout') {
         if (!nom) return;
-        return App.store.update(st => st.essentiels.push({ id: 'ess' + App.u.uid(), nom, emoji: '🛒', unite: 'unité', pack: 1, parSemaine: 1, prix: App.u.num(f.prix.value) || 0, lieu: f.lieu.value }));
+        const groupe = f.groupe ? f.groupe.value : 'maison';
+        return App.store.update(st => st.essentiels.push({ id: 'ess' + App.u.uid(), groupe, nom, emoji: groupe === 'desserts' ? '🍽️' : '🛒', unite: 'unité', pack: 1, parSemaine: 1, prix: App.u.num(f.prix.value) || 0, lieu: f.lieu.value }));
       }
       if (!nom) return;
       App.store.update(() => sem().courses.ajouts.push(
@@ -366,7 +376,7 @@ App.views.courses = {
       else if (act === 'ess-edit') V.editerEssentiel(a.dataset.id);
       else if (act === 'maison-tout') App.store.update(st => {
         const m = sem().courses.maison = sem().courses.maison || {};
-        st.essentiels.forEach(e => { if (m[e.id] == null) m[e.id] = 'ok'; });
+        st.essentiels.filter(e => App.shopping.groupe(e) === (a.dataset.groupe || 'maison')).forEach(e => { if (m[e.id] == null) m[e.id] = 'ok'; });
       });
       else if (act === 'ess-suppr') {
         const e = App.store.state.essentiels.find(x => x.id === a.dataset.id);

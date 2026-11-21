@@ -157,8 +157,8 @@ App.views.accueil = {
     const carteMaison = essAVerifier && !sem.coursesFaitesLe ? `
       <section class="card link-card due" data-action="courses-maison">
         <div class="grow"><small class="muted">Avant les courses</small>
-          <h3>🧻 Vérifier les essentiels de la maison</h3>
-          <small class="muted">${essAVerifier} à vérifier : eau, papier toilette, sacs poubelle…</small></div><span class="chev">›</span>
+          <h3>✅ Vérifier les desserts et la maison</h3>
+          <small class="muted">${essAVerifier} à vérifier : fruits, yaourts, eau, papier toilette…</small></div><span class="chev">›</span>
       </section>` : '';
     const rappels = [carteMaison, App.views.accueil.carteStock(state), App.views.accueil.carteSuivi(state), App.views.accueil.carteFourche(state)].filter(Boolean);
 
@@ -209,7 +209,11 @@ App.views.accueil = {
       const act = a.dataset.action;
       if (act === 'go') App.router.go(a.dataset.route);
       else if (act === 'fiche') App.views.repas.detail(a.dataset.id);
-      else if (act === 'courses-maison') { App.views.courses.onglet = 'maison'; App.router.go('courses'); }
+      else if (act === 'courses-maison') {
+        const m = App.store.semaine().courses.maison || {};
+        App.views.courses.onglet = App.store.state.essentiels.some(e => e.groupe === 'desserts' && m[e.id] == null) ? 'desserts' : 'maison';
+        App.router.go('courses');
+      }
       else if (act === 'cuisiner') App.cuisine.ouvrir(a.dataset.id);
       else if (act === 'changer') {
         // Le repas du jour est toujours dans la semaine en cours
