@@ -49,10 +49,11 @@ App.shopping = {
   },
 
   /** Coefficient appliqué aux quantités : un gâteau se fait en entier. */
-  facteur(r, state) {
+  facteur(r, state, slot = null) {
     // Gâteau : on le fait en entier · bébé : une portion par repas · adultes : selon le nombre de portions
     if (r.categorie === 'Douceurs' || r.categorie === 'Bébé') return 1;
-    return state.settings.portions / (r.portions || 2);
+    // Repas avec des invités (« raclette pour 10 ») : selon le nombre de convives de ce repas
+    return ((slot && slot.personnes) || state.settings.portions) / (r.portions || 2);
   },
 
   ing(id) {
@@ -67,13 +68,13 @@ App.shopping = {
     const aCuisiner = Object.values(semaine.slots)
       // un repas reporté a été acheté cette semaine mais sera mangé la semaine suivante
       .filter(s => App.shopping.compteDansCourses(s) && !(nonConsommes && (s.consomme || s.type === 'reporte')))
-      .map(s => s.repasId)
-      .concat(nonConsommes && semaine.douceursConsommees ? []
-        : (semaine.douceurs || []).filter(id => !(nonConsommes && (semaine.douceursCuites || []).includes(id))));
-    aCuisiner.forEach(repasId => {
+      .map(s => ({ repasId: s.repasId, slot: s }))
+      .concat((nonConsommes && semaine.douceursConsommees ? []
+        : (semaine.douceurs || []).filter(id => !(nonConsommes && (semaine.douceursCuites || []).includes(id)))).map(repasId => ({ repasId })));
+    aCuisiner.forEach(({ repasId, slot }) => {
       const r = App.store.repas(repasId);
       if (!r) return;
-      const f = App.shopping.facteur(r, state);
+      const f = App.shopping.facteur(r, state, slot);
       r.ingredients.forEach(([id, q]) => {
         const e = res[id] || (res[id] = { qty: 0, repas: [] });
         if (q != null) e.qty += q * f;

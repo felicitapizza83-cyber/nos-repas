@@ -34,6 +34,7 @@ App.importer = {
   /** Mots courants → identifiant d'ingrédient de l'app. */
   SYNONYMES: {
     'pomme de terre': 'pdt', 'pommes de terre': 'pdt', 'patates': 'pdt', 'patate': 'pdt',
+    'patate douce': 'patate-douce', 'patates douces': 'patate-douce', 'lait de coco': 'lait-coco', 'creme de coco': 'lait-coco',
     'oeuf': 'oeuf', 'oeufs': 'oeuf', 'jaune d oeuf': 'oeuf', 'blanc d oeuf': 'oeuf',
     'creme fraiche': 'creme', 'creme liquide': 'creme', 'creme': 'creme', 'lait': 'lait',
     'huile d olive': 'huile-olive', 'huile': 'huile-olive', 'beurre': 'beurre', 'farine': 'farine',
@@ -59,7 +60,9 @@ App.importer = {
   MOTS_VIDES: new Set(['de', 'du', 'des', 'la', 'le', 'les', 'd', 'l', 'a', 'au', 'aux', 'et', 'ou', 'en', 'frais', 'fraiche',
     'fraiches', 'gros', 'grosse', 'petit', 'petite', 'petits', 'petites', 'bio', 'environ', 'bien', 'mur', 'mure', 'mures',
     'hache', 'hachee', 'haches', 'emince', 'emincee', 'coupe', 'coupee', 'rape', 'rapee', 'cuit', 'cuite', 'cru', 'crue',
-    'surgele', 'surgeles', 'surgelee', 'surgelees', 'entier', 'entiere', 'moyen', 'moyenne', 'moyens', 'gros', 'facultatif']),
+    'surgele', 'surgeles', 'surgelee', 'surgelees', 'entier', 'entiere', 'moyen', 'moyenne', 'moyens', 'gros', 'facultatif',
+    'halal', 'filet', 'filets', 'pave', 'paves', 'tranche', 'tranches', 'morceau', 'morceaux', 'complet', 'complete', 'completes',
+    'leger', 'legere', 'nature', 'pour', 'avec', 'sans', 'boite', 'conserve']),
 
   nombre(t) {
     if (!t) return null;
@@ -112,7 +115,7 @@ App.importer = {
 
   /** Ingrédient de l'app le plus proche d'un nom libre (ou null). */
   correspondance(nomLibre, state) {
-    const n = App.u.norm(nomLibre).replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+    const n = App.u.norm(nomLibre).replace(/œ/g, 'oe').replace(/æ/g, 'ae').replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
     if (!n) return { id: null, ignore: true };
     // Synonymes : expression la plus longue d'abord
     const cles = Object.keys(this.SYNONYMES).sort((a, b) => b.length - a.length);
@@ -126,11 +129,18 @@ App.importer = {
     const mots = n.split(' ').filter(m => m.length >= 3 && !this.MOTS_VIDES.has(m)).map(m => m.replace(/(x|s)$/, ''));
     if (!mots.length) return { id: null };
     let best = null, bestScore = 0;
+    const sig = m => m.length >= 3 && !this.MOTS_VIDES.has(m);
     state.ingredients.forEach(i => {
-      const nomI = App.u.norm(i.nom).replace(/[^a-z0-9 ]/g, ' ');
-      const motsI = nomI.split(/\s+/).map(m => m.replace(/(x|s)$/, ''));
+      // Jamais un produit bébé (petits pots) ni un article de la maison pour une recette d'adulte
+      if (/^(orchestra|bb-)/.test(i.id) || i.rayon === 'Bébé') return;
+      const nomI = App.u.norm(i.nom).replace(/œ/g, 'oe').replace(/æ/g, 'ae').replace(/[^a-z0-9 ]/g, ' ');
+      const motsI = nomI.split(/\s+/).filter(sig).map(m => m.replace(/(x|s)$/, ''));
       let s = 0;
       mots.forEach((m, k) => { if (motsI.includes(m)) s += k === 0 ? 3 : 2; else if (nomI.includes(m)) s += 1; });
+      // « fromage à raclette » n'est pas du « fromage blanc » : chacun a un mot que l'autre n'a pas
+      const toutLu = mots.every(m => motsI.includes(m)), toutI = motsI.every(m => mots.includes(m));
+      if (!toutLu && !toutI) s = Math.min(s, 1);
+      else if (toutLu && toutI) s += 1;   // « pommes » : les Pommes plutôt que les Pommes de terre
       if (s > bestScore) { bestScore = s; best = i; }
     });
     return bestScore >= 2 ? { id: best.id } : { id: null };

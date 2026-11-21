@@ -67,7 +67,7 @@ App.consignes = {
     'envie', 'repas', 'cuisine', 'cuisiner', 'energie', 'lait', 'force', 'courage', 'idee', 'midi', 'soir'],
 
   // ---------- Lecture de la phrase ----------
-  /** États de santé et régimes : toujours traités sur le téléphone, jamais envoyés à l'IA. */
+  /** États de santé et régimes que l'app sait traiter seule (sans IA, ou hors réseau). */
   SENSIBLES: ['regles', 'fatigue', 'ventre', 'rhume', 'transit', 'stress', 'nausee', 'lait', 'sport'],
   /** La consigne trouvée seule est-elle sûre (santé, régime, exclusion), ou vaut-il mieux demander à l'IA ? */
   fiable(c) {
