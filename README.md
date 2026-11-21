@@ -3,6 +3,11 @@
 Application web installable sur iPhone (PWA) pour alléger la charge mentale des repas :
 envies de la semaine → objectif naturopathie → menu → liste de courses → budget.
 
+## Versions
+
+- **V2 (racine)** : accueil « repas du jour », menu ☰ (minuteurs, convertisseur, garde-manger, aide, réglages), 5 onglets, points nutritionnels, budget unique avec « Alléger », courses à glisser et mode magasin.
+- **V1 (`v1/`)** : l'ancien design, conservé tel quel. Mêmes données (même stockage), mêmes photos, polices et icônes que la V2.
+
 ## Tester sur le Mac
 
 ```bash
