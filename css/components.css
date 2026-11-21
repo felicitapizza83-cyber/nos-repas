@@ -822,3 +822,11 @@ small.block, .block { display: block; }
 .ajout-ligne { display: flex; gap: 8px; align-items: center; }
 .ajout-ligne input { flex: 1 1 70px; min-width: 0; }
 .ajout-ligne select { flex: 1 1 120px; min-width: 0; }
+
+/* Champ façon iMessage : bouton d'envoi rond dans la bulle */
+.envie-form { position: relative; }
+.envie-form input { flex: 1; border-radius: 22px; padding-right: 48px; }
+.envie-form .envoyer { position: absolute; right: 5px; top: 50%; transform: translateY(-50%); width: 34px; height: 34px; border-radius: 50%;
+  border: 0; padding: 0; display: grid; place-items: center; background: var(--primary); color: #fff; cursor: pointer; transition: opacity .15s, transform .15s; }
+.envie-form .envoyer:active { transform: translateY(-50%) scale(.92); }
+.envie-form input:placeholder-shown + .envoyer { opacity: .35; }
