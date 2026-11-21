@@ -44,8 +44,7 @@ App.router = {
     console.error(err);
     el.innerHTML = App.ui.vide('🫣', 'Oups, cet écran n’a pas pu s’afficher',
       'Vos données sont intactes. Rechargez l’app ; si cela recommence, notez-le dans Aide & support.',
-      `<div class="grid2" style="margin-top:12px"><button class="btn btn-primary" onclick="location.reload()">Recharger</button>
-       <a class="btn" href="v1/">Version 1</a></div>
+      `<button class="btn btn-primary" style="margin-top:12px" onclick="location.reload()">Recharger</button>
        <small class="muted erreur-detail">${App.u.esc(err && err.message || err)}</small>`);
   },
 

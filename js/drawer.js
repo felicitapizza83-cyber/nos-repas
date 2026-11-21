@@ -1,6 +1,5 @@
 /* Menu ☰ (en haut à gauche) : outils, suivi, réglages, aide — tout ce qui n'a pas besoin d'un onglet. */
 App.drawer = {
-  VERSION: 'V2 · novembre 2026',
 
   init() {
     document.getElementById('btn-menu').onclick = () => App.drawer.ouvrir();
@@ -53,9 +52,7 @@ App.drawer = {
         ${item('reglages', '⚙️', 'Réglages', 'Famille, bébé, budget, sauvegarde')}
         ${item('apparence', '🎨', 'Apparence', 'Couleur, clair ou sombre')}
         ${item('aide', '💬', 'Aide & support', 'Questions fréquentes, nous écrire')}
-        ${item('nouveautes', '✨', 'Quoi de neuf ?', App.drawer.VERSION)}
-        ${item('v1', '↩︎', 'Revenir à la version 1', 'Même données, ancien design')}
-        <p class="d-pied">${App.drawer.VERSION}</p>
+        ${item('nouveautes', '✨', 'Quoi de neuf ?', 'Les dernières nouveautés')}
       </div>`;
   },
 
@@ -89,7 +86,6 @@ App.drawer = {
       else if (d === 'apparence') App.apparence.ouvrir(false);
       else if (d === 'nouveautes') App.drawer.nouveautes();
       else if (d === 'avec') { App.views.repas.filtre.stock = true; App.router.go('repas'); }
-      else if (d === 'v1') location.href = 'v1/';
     }, 180);
   },
 
@@ -157,7 +153,6 @@ App.drawer = {
   nouveautes() {
     App.ui.sheet(`
       <h2>✨ Quoi de neuf ?</h2>
-      <p class="muted small">${App.drawer.VERSION}</p>
       <ul class="nouveautes">
         <li><b>🏠 Accueil</b> Le repas du jour en grand, avec « Cuisiner » et ses points nutritionnels.</li>
         <li><b>☰ Menu</b> Minuteurs, convertisseur, garde-manger, aide et réglages, à portée de pouce.</li>
@@ -168,7 +163,6 @@ App.drawer = {
         <li><b>📖 Recettes</b> Grandes photos, recherche plus large, un seul bouton « + ».</li>
         <li><b>⚙️ Réglages</b> Tout au même endroit : famille, bébé, budget, sauvegarde.</li>
       </ul>
-      <p class="muted small">L’ancienne version reste disponible : menu ☰ › Revenir à la version 1.</p>
       <button class="btn btn-primary block" data-action="ok">Super</button>`, a => { if (a === 'ok') App.ui.closeSheet(); });
   }
 };

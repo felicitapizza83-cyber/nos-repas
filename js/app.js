@@ -13,11 +13,8 @@ document.addEventListener('DOMContentLoaded', () => {
       <section class="vide-illus">
         <div class="vide-cercle"><span>🫣</span></div>
         <h3>L’app n’a pas pu démarrer</h3>
-        <p class="muted">Vos données sont intactes. Rechargez ; si cela recommence, ouvrez la version 1.</p>
-        <div class="grid2" style="margin-top:12px">
-          <button class="btn btn-primary" onclick="location.reload()">Recharger</button>
-          <a class="btn" href="v1/">Version 1</a>
-        </div>
+        <p class="muted">Vos données sont intactes. Rechargez ; si cela recommence, notez-le dans Aide & support.</p>
+        <button class="btn btn-primary" style="margin-top:12px" onclick="location.reload()">Recharger</button>
         <small class="muted erreur-detail">${String(err && err.message || err).replace(/</g, '&lt;')}</small>
       </section>`;
   }
