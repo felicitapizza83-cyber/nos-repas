@@ -367,7 +367,7 @@ input[type=checkbox] { width: 22px; height: 22px; min-height: 0; accent-color: v
 .apparence h2 { font-size: 1.7rem; }
 .apparence .intro { color: var(--muted); margin: 6px 0 18px; }
 .apparence h3 { text-align: left; margin: 18px 2px 10px; }
-.swatches { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.swatches { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
 .swatch {
   display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 6px;
   border-radius: 18px; border: 2px solid var(--line); background: var(--surface); cursor: pointer;
@@ -529,7 +529,7 @@ small.block, .block { display: block; }
   background: color-mix(in srgb, var(--surface) 88%, transparent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
   font-weight: 700; font-size: .8rem; color: var(--text);
 }
-.jour-badge.plat { position: static; display: inline-block; background: var(--primary-soft); color: var(--primary); margin-bottom: 8px; }
+.jour-badge.plat { position: static; display: inline-block; background: var(--accent-soft); color: var(--accent); margin-bottom: 8px; }
 .jour-corps { padding: 14px 16px 16px; }
 .jour-corps h2 { font-size: 1.4rem; cursor: pointer; margin-bottom: 10px; }
 .jour-infos { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 8px 0 12px; font-size: .88rem; color: var(--muted); }
@@ -570,7 +570,7 @@ small.block, .block { display: block; }
 .bande-jour strong { font-size: 1.05rem; }
 .bande-jour i { width: 5px; height: 5px; border-radius: 50%; background: var(--line); margin-top: 2px; }
 .bande-jour.plein i { background: var(--primary); }
-.bande-jour.today { background: var(--primary); color: var(--primary-ink); }
+.bande-jour.today { background: var(--accent); color: #fff; }
 .bande-jour.today small { color: inherit; opacity: .85; }
 .bande-jour.today i { background: var(--primary-ink); }
 .menu-actions { align-items: center; }
