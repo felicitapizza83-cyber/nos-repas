@@ -63,7 +63,7 @@ App.views.courses = {
       <li class="item ${e.coche ? 'done' : ''}" data-swipe="ess" data-id="${e.ess}">
         <label class="check">
           <input type="checkbox" data-kind="ess" data-id="${e.ess}" ${e.coche ? 'checked' : ''}/>
-          <span class="grow"><strong>${e.emoji} ${esc(e.nom)}</strong> ${e.packs > 1 ? `<span class="muted">× ${e.packs}</span>` : ''}</span>
+          <span class="grow"><strong>${e.emoji} ${esc(e.nom)}</strong> <span class="muted">${e.pack > 1 ? `pack de ${e.pack} ` : ''}× ${e.packs}</span></span>
         </label>
         <div class="item-side"><small>${euro(e.cout)}</small></div>
       </li>`;
@@ -85,7 +85,7 @@ App.views.courses = {
     };
 
     const vide = App.shopping.LIEUX.every(x => !l.lieux[x].rayons.length && !l.lieux[x].ajouts.length && !l.lieux[x].maison.length) && !l.fourche.length;
-    const aVerifier = (state.essentiels || []).filter(e => !(sem.courses.maison || {})[e.id]).length;
+    const aVerifier = (state.essentiels || []).filter(e => (sem.courses.maison || {})[e.id] == null).length;
     const onglets = `
       <div class="who segment courses-onglets">
         <button class="seg ${V.onglet === 'repas' ? 'on' : ''}" data-action="onglet" data-v="repas">🥕 Repas</button>
@@ -140,50 +140,112 @@ App.views.courses = {
       ${sem.coursesFaitesLe ? '' : `<div class="sticky-bottom"><button class="btn btn-primary block-btn" data-action="faites">Courses faites ✓ <small>ranger au garde-manger</small></button></div>`}`;
   },
 
-  /** Onglet « Maison » : les essentiels à vérifier une fois par semaine. */
+  /** « bouteille de 1,5 L » → « bouteilles de 1,5 L » */
+  pluriel(unite, n) {
+    if (!unite || n <= 1) return unite || '';
+    const [premier, ...reste] = unite.split(' ');
+    return [/[sxz]$/.test(premier) ? premier : /(eau|au|eu)$/.test(premier) ? premier + 'x' : premier + 's', ...reste].join(' ');
+  },
+
+  /** Onglet « Maison » : on indique ce qu'on a, l'app calcule ce qu'il faut acheter pour la semaine. */
   vueMaison(state, sem) {
     const { esc, euro } = App.u;
+    const V = App.views.courses;
     const m = sem.courses.maison || {};
     const liste = state.essentiels || [];
-    const faits = liste.filter(e => m[e.id]).length;
+    const faits = liste.filter(e => m[e.id] != null).length;
     const ess = App.shopping.essentiels(sem, state);
-    const litres = state.settings.eauLitresParJour || 0;
+    const total = ess.reduce((s, e) => s + e.cout, 0);
+    const arrondi = x => Number.isInteger(x) ? x : x.toFixed(1).replace('.', ',');
     return `
       <section class="card courses-resume">
         <div class="row-between">
           <div><span class="gros">${faits}/${liste.length}</span><small class="muted"> vérifiés</small></div>
-          <div class="muted">${ess.length} à acheter · <strong class="txt">${euro(ess.reduce((s, e) => s + e.cout, 0))}</strong></div>
+          <div class="muted">${ess.length ? `${ess.length} à acheter · <strong class="txt">${euro(total)}</strong>` : faits ? '<strong class="ok">Rien à acheter 👍</strong>' : ''}</div>
         </div>
         <div class="bar"><span style="width:${liste.length ? (faits / liste.length * 100).toFixed(1) : 0}%"></span></div>
-        <small class="muted">Une fois par semaine : « On en a » ou « À acheter ». Ce qui est à acheter s’ajoute à la liste du drive et au budget.</small>
-        ${faits < liste.length ? '<button class="btn block" data-action="maison-tout">✓ Tout le reste, on en a</button>' : ''}
+        <small class="muted">Indiquez ce que vous avez à la maison : l’app compare à ce que vous utilisez en une semaine et ajoute au drive seulement ce qui manque.</small>
+        ${faits < liste.length ? '<button class="btn block" data-action="maison-tout">✓ Pour le reste, on en a assez</button>' : ''}
       </section>
       <ul class="card list essentiels">${liste.map(e => {
         const v = m[e.id];
-        const eau = e.auto === 'eau' ? Math.max(1, Math.ceil(litres * 7 / 9 - 1e-9)) : 0;
+        const c = App.shopping.calculEssentiel(e, v, state);
+        const n = typeof v === 'number' ? v : '';
+        const resultat = v == null ? '<span class="ess-res attente">À vérifier</span>'
+          : c.packs ? `<span class="ess-res acheter">À acheter : ${c.packs} ${e.pack > 1 ? `pack${c.packs > 1 ? 's' : ''} de ${e.pack}` : V.pluriel(e.unite, c.packs)} · ${euro(c.cout)}</span>`
+          : '<span class="ess-res ok">✓ Assez pour la semaine</span>';
         return `
-        <li class="item essentiel ${v ? 'fait' : ''}">
-          <span class="ess-emoji">${e.emoji}</span>
-          <span class="grow"><strong>${esc(e.nom)}</strong>
-            ${eau ? `<small class="muted block">${litres} L par jour → ${litres * 7} L par semaine = ${eau} pack${eau > 1 ? 's' : ''}</small>` : ''}
-            <small class="muted">${euro((eau || 1) * (e.prix || 0))}</small></span>
-          <div class="ess-choix">
-            <button class="mini ${v === 'ok' ? 'on' : ''}" data-action="maison" data-id="${e.id}" data-v="ok">On en a</button>
-            <button class="mini ${v === 'acheter' ? 'on acheter' : ''}" data-action="maison" data-id="${e.id}" data-v="acheter">À acheter</button>
+        <li class="essentiel ${v != null ? 'fait' : ''}">
+          <div class="ess-tete" data-action="ess-edit" data-id="${e.id}">
+            <span class="ess-emoji">${e.emoji}</span>
+            <span class="grow"><strong>${esc(e.nom)}</strong>
+              <small class="muted block">Il en faut ~${arrondi(c.besoin)} ${esc(V.pluriel(e.unite, c.besoin))} par semaine${e.pack > 1 ? ` · vendu par ${e.pack}` : ''}</small></span>
+            <span class="chev">›</span>
           </div>
-          <button class="icon-btn small" data-action="ess-suppr" data-id="${e.id}" aria-label="Retirer de la liste">✕</button>
+          <div class="ess-ligne">
+            <small class="muted">On a :</small>
+            <div class="stepper">
+              <button class="icon-btn small" data-action="ess-moins" data-id="${e.id}" aria-label="Moins">−</button>
+              <input name="ess-qte" data-id="${e.id}" inputmode="decimal" value="${n}" placeholder="?" aria-label="Quantité à la maison"/>
+              <button class="icon-btn small" data-action="ess-plus" data-id="${e.id}" aria-label="Plus">+</button>
+            </div>
+            <button class="mini ${v === 'ok' ? 'on' : ''}" data-action="ess-assez" data-id="${e.id}">Assez</button>
+          </div>
+          ${resultat}
         </li>`;
       }).join('')}</ul>
       <h3 class="section-title">Ajouter un essentiel</h3>
       <section class="card">
         <form class="add-form" data-action="ess-ajout">
-          <input name="nom" placeholder="Piles, ampoules, croquettes…" autocomplete="off"/>
+          <input name="nom" placeholder="Piles, croquettes, ampoules…" autocomplete="off"/>
           <input name="prix" inputmode="decimal" placeholder="€" class="prix"/>
           <select name="lieu" class="lieu-select"><option value="drive">Drive</option><option value="producteur">Producteur</option><option value="boucherie">Boucherie</option><option value="orchestra">Orchestra</option></select>
           <button class="btn btn-primary" type="submit" aria-label="Ajouter">＋</button>
         </form>
-        <small class="muted">L’eau se règle dans Réglages (litres bus par jour).</small>
+        <small class="muted">Touchez un essentiel pour régler son unité, la taille du pack, la consommation par semaine et le prix. L’eau suit les litres bus par jour (Réglages).</small>
       </section>`;
+  },
+
+  /** Régler un essentiel : unité, pack, consommation par semaine, prix, lieu, ou le retirer. */
+  editerEssentiel(id) {
+    const st = App.store.state, { esc } = App.u;
+    const e = st.essentiels.find(x => x.id === id);
+    if (!e) return;
+    const eau = e.auto === 'eau';
+    App.ui.sheet(`
+      <h2>${e.emoji} ${esc(e.nom)}</h2>
+      <form data-action="ok" class="stack">
+        <label>Nom<input name="nom" value="${esc(e.nom)}"/></label>
+        <div class="row">
+          <label class="grow">Ce qu’on compte<input name="unite" value="${esc(e.unite || '')}" placeholder="rouleau, sac, dose…"/></label>
+          <label style="width:6.5rem">Par pack<input name="pack" inputmode="decimal" value="${e.pack || 1}"/></label>
+        </div>
+        ${eau ? `<p class="muted small">💧 Consommation : ${st.settings.eauLitresParJour} L par jour pour le foyer, à régler dans Réglages.</p>`
+              : `<label>Utilisé par semaine (environ)<input name="parSemaine" inputmode="decimal" value="${e.parSemaine ?? 1}"/></label>`}
+        <div class="row">
+          <label class="grow">Prix du pack (€)<input name="prix" inputmode="decimal" value="${e.prix || 0}"/></label>
+          <label class="grow">Où l’acheter<select name="lieu">${['drive', 'producteur', 'boucherie', 'orchestra'].map(l =>
+            `<option value="${l}" ${l === (e.lieu || 'drive') ? 'selected' : ''}>${(window.APP_DATA.lieux.find(x => x.id === l) || { nom: l }).nom}</option>`).join('')}</select></label>
+        </div>
+        <button class="btn btn-primary" type="submit">Enregistrer</button>
+      </form>
+      <button class="btn btn-ghost-danger block" data-action="suppr">Retirer de la liste</button>`, (action, target) => {
+      if (action === 'ok') {
+        const n = App.u.num;
+        App.store.update(s => {
+          const x = s.essentiels.find(y => y.id === id);
+          x.nom = target.nom.value.trim() || x.nom;
+          x.unite = target.unite.value.trim() || 'unité';
+          x.pack = Math.max(1, n(target.pack.value) || 1);
+          if (!eau) x.parSemaine = Math.max(0, n(target.parSemaine.value) ?? 0);
+          x.prix = Math.max(0, n(target.prix.value) || 0);
+          x.lieu = target.lieu.value;
+        });
+        App.ui.closeSheet();
+      }
+      if (action === 'suppr') App.ui.confirmSheet(`Retirer « ${e.nom} » de la liste des essentiels ?`, 'Retirer', () =>
+        App.store.update(s => { s.essentiels = s.essentiels.filter(x => x.id !== id); }));
+    });
   },
 
   blocAjout() {
@@ -237,6 +299,11 @@ App.views.courses = {
     el.onchange = e => {
       const t = e.target;
       if (['coche', 'ajout', 'ess'].includes(t.dataset.kind)) V.basculer(t.dataset.kind, t.dataset.id);
+      if (t.name === 'ess-qte') App.store.update(() => {
+        const m = sem().courses.maison = sem().courses.maison || {};
+        const v = App.u.num(t.value);
+        if (v == null) delete m[t.dataset.id]; else m[t.dataset.id] = Math.max(0, v);
+      });
     };
     // Glisser une ligne vers la droite pour la cocher (écouteurs posés une seule fois)
     if (!V.glisser) {
@@ -270,7 +337,7 @@ App.views.courses = {
       const f = e.target, nom = f.nom.value.trim();
       if (f.dataset.action === 'ess-ajout') {
         if (!nom) return;
-        return App.store.update(st => st.essentiels.push({ id: 'ess' + App.u.uid(), nom, emoji: '🛒', prix: App.u.num(f.prix.value) || 0, lieu: f.lieu.value }));
+        return App.store.update(st => st.essentiels.push({ id: 'ess' + App.u.uid(), nom, emoji: '🛒', unite: 'unité', pack: 1, parSemaine: 1, prix: App.u.num(f.prix.value) || 0, lieu: f.lieu.value }));
       }
       if (!nom) return;
       App.store.update(() => sem().courses.ajouts.push(
@@ -282,15 +349,21 @@ App.views.courses = {
       const act = a.dataset.action;
       if (App.commun.handle(act)) return;
       if (act === 'onglet') { V.onglet = a.dataset.v; App.router.render(false); }
-      else if (act === 'maison') App.store.update(() => {
+      else if (act === 'ess-plus' || act === 'ess-moins') App.store.update(() => {
         const m = sem().courses.maison = sem().courses.maison || {};
-        m[a.dataset.id] = m[a.dataset.id] === a.dataset.v ? undefined : a.dataset.v;
-        if (!m[a.dataset.id]) delete m[a.dataset.id];
+        const v = typeof m[a.dataset.id] === 'number' ? m[a.dataset.id] : 0;
+        m[a.dataset.id] = Math.max(0, v + (act === 'ess-plus' ? 1 : -1));
         App.ui.haptique();
       });
+      else if (act === 'ess-assez') App.store.update(() => {
+        const m = sem().courses.maison = sem().courses.maison || {};
+        if (m[a.dataset.id] === 'ok') delete m[a.dataset.id]; else m[a.dataset.id] = 'ok';
+        App.ui.haptique();
+      });
+      else if (act === 'ess-edit') V.editerEssentiel(a.dataset.id);
       else if (act === 'maison-tout') App.store.update(st => {
         const m = sem().courses.maison = sem().courses.maison || {};
-        st.essentiels.forEach(e => { if (!m[e.id]) m[e.id] = 'ok'; });
+        st.essentiels.forEach(e => { if (m[e.id] == null) m[e.id] = 'ok'; });
       });
       else if (act === 'ess-suppr') {
         const e = App.store.state.essentiels.find(x => x.id === a.dataset.id);

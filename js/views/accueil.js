@@ -153,7 +153,7 @@ App.views.accueil = {
     }).join('');
 
     const ess = state.essentiels || [];
-    const essAVerifier = ess.filter(e => !((sem.courses.maison || {})[e.id])).length;
+    const essAVerifier = ess.filter(e => (sem.courses.maison || {})[e.id] == null).length;
     const carteMaison = essAVerifier && !sem.coursesFaitesLe ? `
       <section class="card link-card due" data-action="courses-maison">
         <div class="grow"><small class="muted">Avant les courses</small>
