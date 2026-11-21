@@ -51,7 +51,9 @@ App.views.budget = {
       <section class="card liste-budget">
         ${b.lieux.map(x => {
           const L = window.APP_DATA.lieux.find(y => y.id === x.id) || { emoji: '', nom: x.id };
-          return x.id === 'producteur' || x.id === 'drive' || x.montant || x.reel ? lieu(x, `${L.emoji} ${L.nom}`) : '';
+          // Toujours visibles : producteur, boucherie, drive ; Orchestra si les repas de bébé sont planifiés
+          const visible = x.id !== 'orchestra' || (state.settings.bebe && state.settings.bebe.actif) || x.montant || x.reel;
+          return visible ? lieu(x, `${L.emoji} ${L.nom}`) : '';
         }).join('')}
       </section>
 
