@@ -19,6 +19,8 @@ App.sync = {
     appId: '1:888273839387:web:3f3e572ce47efba034dfbe'
   },
   SDK: 'https://www.gstatic.com/firebasejs/12.6.0/',
+  /** Clé de site reCAPTCHA (Fraud Defense, publique) : sert à App Check, obligatoire pour l’IA depuis novembre 2026. */
+  RECAPTCHA: '6LeixisuAAAAANR3WI1_uPDj-tlX9j5oVc5rm-3-',
   K_BASE: 'nos-repas-sync-base',   // état tel qu'il était à la dernière synchro (pour calculer les différences)
   K_EMAIL: 'nos-repas-sync-email', // adresse en attente du lien
   K_DERNIERE: 'nos-repas-sync-date',
@@ -49,6 +51,11 @@ App.sync = {
     const F = App.sync.fb;
     const app = F.initializeApp(App.sync.CONFIG);
     App.sync.app = app;
+    // App Check : prouve que les demandes à l’IA viennent bien de Cook Easy (reCAPTCHA Fraud Defense, invisible)
+    try {
+      const ac = await import(App.sync.SDK + 'firebase-app-check.js');
+      App.sync.appCheck = ac.initializeAppCheck(app, { provider: new ac.ReCaptchaEnterpriseProvider(App.sync.RECAPTCHA), isTokenAutoRefreshEnabled: true });
+    } catch (e) { console.warn('App Check indisponible', e); }
     App.sync.auth = F.getAuth(app);
     App.sync.db = F.getFirestore(app);
     try { App.sync.base = JSON.parse(localStorage.getItem(App.sync.K_BASE)); } catch (e) { App.sync.base = null; }
