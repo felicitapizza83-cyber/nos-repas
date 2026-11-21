@@ -13,7 +13,9 @@ App.shopping = {
 
   /** Coefficient appliqué aux quantités : un gâteau se fait en entier. */
   facteur(r, state) {
-    return r.categorie === 'Douceurs' ? 1 : state.settings.portions / (r.portions || 2);
+    // Gâteau : on le fait en entier · bébé : une portion par repas · adultes : selon le nombre de portions
+    if (r.categorie === 'Douceurs' || r.categorie === 'Bébé') return 1;
+    return state.settings.portions / (r.portions || 2);
   },
 
   ing(id) {
@@ -103,7 +105,7 @@ App.shopping = {
 
     const hebdo = items.filter(i => i.lieu !== 'fourche');
     const lieux = {};
-    ['producteur', 'drive'].forEach(l => {
+    ['producteur', 'drive', 'orchestra'].forEach(l => {
       const its = hebdo.filter(i => i.lieu === l && !i.placard);
       const ajouts = c.ajouts.filter(a => (a.lieu || 'drive') === l);
       const total = its.filter(i => !i.enStock).reduce((s, i) => s + i.cout, 0) +
@@ -116,7 +118,7 @@ App.shopping = {
     const nbDeduits = items.filter(i => i.reste > 0).length;
 
     const aAcheter = hebdo.filter(i => !i.enStock);
-    const total = lieux.producteur.total + lieux.drive.total;
+    const total = lieux.producteur.total + lieux.drive.total + lieux.orchestra.total;
     const nb = aAcheter.length + c.ajouts.length;
     const nbCoches = aAcheter.filter(i => i.coche).length + c.ajouts.filter(a => a.coche).length;
     return { lieux, placard, fourche, nbDeduits, total, nb, nbCoches, aAcheter, dispo };
@@ -134,7 +136,7 @@ App.shopping = {
   texte(semaine, state, lieu) {
     const l = App.shopping.liste(semaine, state);
     const L = l.lieux[lieu];
-    const nomLieu = lieu === 'drive' ? state.settings.drive : 'Producteur';
+    const nomLieu = lieu === 'drive' ? state.settings.drive : lieu === 'orchestra' ? 'Orchestra (bébé)' : 'Producteur';
     const lignes = [`🛒 ${nomLieu} — ${App.u.weekLabel(state.semaineActive)}`];
     L.rayons.forEach(r => {
       const it = r.items.filter(i => !i.enStock);

@@ -90,7 +90,7 @@ App.stock = {
       App.JOURS.forEach((j, i) => {
         const d = App.u.parseKey(k); d.setDate(d.getDate() + i);
         if (App.u.key(d) >= auj) return; // le jour n'est pas encore terminé
-        App.MOMENTS.forEach(m => {
+        [...App.MOMENTS, ...App.MOMENTS_BEBE].forEach(m => {
           const s = w.slots[`${j.id}-${m.id}`];
           if (!s || s.type !== 'maison' || s.consomme) return;
           const r = App.store.repas(s.repasId);
@@ -144,6 +144,7 @@ App.stock = {
   /** Repas classés par ce qu'on a déjà (au moins la moitié des ingrédients). */
   avecCeQueJai(state, min = 50) {
     return state.repas
+      .filter(r => r.categorie !== 'Bébé')
       .map(r => ({ r, ...App.stock.cuisinable(state, r) }))
       .filter(x => x.pct >= min)
       .sort((a, b) => b.pct - a.pct || a.manque.length - b.manque.length);

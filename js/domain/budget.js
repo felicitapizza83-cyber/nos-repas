@@ -3,7 +3,7 @@ App.budget = {
   resume(semaine, state, k = state.semaineActive) {
     const l = App.shopping.liste(semaine, state, k);
     const dep = semaine.depenses || {};
-    const lieux = ['producteur', 'drive'].map(id => {
+    const lieux = ['producteur', 'drive', 'orchestra'].map(id => {
       const reel = dep[id] != null;
       return { id, estime: l.lieux[id].total, reel, montant: reel ? dep[id] : l.lieux[id].total };
     });
@@ -31,7 +31,7 @@ App.budget = {
   /** Une semaine compte dans les bilans si elle a un menu ou une dépense saisie. */
   active(w) {
     return w && (Object.keys(w.slots).length || (w.douceurs || []).length ||
-      (w.depenses && (w.depenses.drive != null || w.depenses.producteur != null)));
+      (w.depenses && (w.depenses.drive != null || w.depenses.producteur != null || w.depenses.orchestra != null)));
   },
 
   historique(state, n = 8) {

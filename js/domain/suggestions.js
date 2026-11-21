@@ -26,7 +26,7 @@ App.suggest = {
     const restes = App.stock.frais(state);
     const vite = new Set(App.stock.aUtiliserVite(state).map(x => x.id));
     return state.repas
-      .filter(r => r.categorie !== 'Douceurs')
+      .filter(r => r.categorie !== 'Douceurs' && r.categorie !== 'Bébé')
       .map(r => ({
         r,
         s: App.suggest.score(r, obj)
@@ -55,7 +55,7 @@ App.suggest = {
     const compte = {};
     Object.values(semaine.slots).forEach(s => {
       const r = s && s.repasId && App.store.repas(s.repasId);
-      if (r) { const f = App.suggest.famille(r); compte[f] = (compte[f] || 0) + 1; }
+      if (r && r.categorie !== 'Bébé') { const f = App.suggest.famille(r); compte[f] = (compte[f] || 0) + 1; }
     });
     const pris = new Set(Object.values(semaine.slots).map(s => s && s.repasId));
     let precedent = null;
@@ -72,6 +72,7 @@ App.suggest = {
       precedent = f;
     });
     if (semaine.douceurs == null) App.suggest.proposerDouceurs(state, semaine);
+    if (state.settings.bebe && state.settings.bebe.actif) App.suggest.remplirBebe(state, semaine);
     return libres.length;
   },
 
@@ -96,6 +97,66 @@ App.suggest = {
     if (t.includes('volaille')) return 'volaille';
     if (t.includes('legumineuses')) return 'legumineuses';
     return 'vegetarien';
+  },
+
+  // ----- Repas de bébé -----
+
+  /** Âge de bébé en mois (8 par défaut tant que la date de naissance n'est pas indiquée). */
+  ageBebe(state) {
+    const n = state.settings.bebe && state.settings.bebe.naissance; // « AAAA-MM »
+    if (!n) return 8;
+    const [y, m] = n.split('-').map(Number);
+    const d = new Date();
+    return Math.max(0, (d.getFullYear() - y) * 12 + (d.getMonth() + 1 - m));
+  },
+
+  /** Repas de bébé possibles pour un moment (« legumes » ou « fruit ») et son âge. */
+  repasBebe(state, type, source = null) {
+    const age = App.suggest.ageBebe(state);
+    return state.repas.filter(r => r.categorie === 'Bébé' && r.moment === type && (r.ageMin || 0) <= age
+      && (!source || r.source === source));
+  },
+
+  /** Remplit les repas de bébé de la semaine : purées maison variées, quelques pots Orchestra. */
+  remplirBebe(state, semaine) {
+    const age = App.suggest.ageBebe(state);
+    const melanger = a => a.slice().sort(() => Math.random() - 0.5);
+    const proteine = r => r.tags.some(t => ['volaille', 'poisson', 'poisson-gras', 'viande-rouge', 'legumineuses'].includes(t));
+    const legumes = melanger(App.suggest.repasBebe(state, 'legumes', 'maison'));
+    const avecProt = legumes.filter(proteine), sansProt = legumes.filter(r => !proteine(r));
+    const fruits = melanger(App.suggest.repasBebe(state, 'fruit', 'maison'));
+    const orch = { legumes: App.suggest.repasBebe(state, 'legumes', 'orchestra'), fruit: App.suggest.repasBebe(state, 'fruit', 'orchestra') };
+
+    // Cases vides et répartition des pots Orchestra (de préférence le soir, pratique)
+    const vides = [];
+    App.JOURS.forEach(j => App.MOMENTS_BEBE.forEach(m => { const id = `${j.id}-${m.id}`; if (!semaine.slots[id]) vides.push({ id, m }); }));
+    const nbOrch = Math.min(state.settings.bebe.orchestraParSemaine || 0, vides.length);
+    const pourOrch = new Set(melanger(vides.filter(v => v.m.id === 'bebe-soir')).concat(melanger(vides.filter(v => v.m.id !== 'bebe-soir')))
+      .slice(0, nbOrch).map(v => v.id));
+
+    const compteurs = { midi: 0, soir: 0, fruit: 0 };
+    const suivant = (liste, cle, jour) => {
+      if (!liste.length) return null;
+      for (let n = 0; n < liste.length; n++) {
+        const r = liste[(compteurs[cle] + n) % liste.length];
+        const memeJour = App.MOMENTS_BEBE.some(m => (semaine.slots[`${jour}-${m.id}`] || {}).repasId === r.id);
+        if (!memeJour) { compteurs[cle] += n + 1; return r; }
+      }
+      return liste[compteurs[cle]++ % liste.length];
+    };
+
+    vides.forEach(({ id, m }) => {
+      const jour = id.split('-')[0];
+      let r = null;
+      if (pourOrch.has(id)) {
+        const choix = m.type === 'fruit' ? orch.fruit : orch.legumes.filter(x => age >= 6 || !proteine(x));
+        r = choix[Math.floor(Math.random() * choix.length)] || null;
+      }
+      if (!r && m.type === 'fruit') r = suivant(fruits, 'fruit', jour);
+      if (!r && m.id === 'bebe-midi') r = suivant(age >= 6 && avecProt.length ? avecProt : sansProt, 'midi', jour);
+      if (!r) r = suivant(sansProt.length ? sansProt : legumes, 'soir', jour);
+      if (r) semaine.slots[id] = { type: 'maison', repasId: r.id, source: 'auto' };
+    });
   },
 
   // ----- Gâteaux de la semaine : 2 différents, sans reprendre ceux des 3 dernières semaines -----
@@ -172,7 +233,7 @@ App.suggest = {
     const douceur = regles.some(R => R.douceur);
     const obj = App.suggest.objectif(App.store.semaine());
     const resultats = state.repas
-      .filter(r => douceur ? r.categorie === 'Douceurs' : r.categorie !== 'Douceurs')
+      .filter(r => douceur ? r.categorie === 'Douceurs' : (r.categorie !== 'Douceurs' && r.categorie !== 'Bébé'))
       .map(r => {
         const nom = App.u.norm(r.nom);
         const ings = App.u.norm(r.ingredients.map(([id]) => (App.store.ingredient(id) || {}).nom || id).join(' '));
