@@ -1,6 +1,26 @@
 /* Bibliothèque de repas : recherche, favoris, « avec ce que j'ai », collections, fiche, mode cuisine. */
 App.views.repas = {
-  title: 'Nos repas',
+  title: 'Recettes',
+
+  tete() {
+    return `<button class="rond primary" data-action="ajouter" aria-label="Ajouter une recette">
+      <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>`;
+  },
+  teteClic(action) {
+    if (action !== 'ajouter') return;
+    App.ui.sheet(`
+      <h2>Ajouter une recette</h2>
+      <div class="ajout-grille">
+        <button data-action="coller"><span>📋</span><strong>Coller</strong><small>Cookidoo, Instagram, site…</small></button>
+        <button data-action="photo"><span>📷</span><strong>Photo</strong><small>Fiche, livre, capture</small></button>
+        <button data-action="lien"><span>🔗</span><strong>Lien</strong><small>Garder l’adresse</small></button>
+        <button data-action="decouvrir"><span>✨</span><strong>Découvrir</strong><small>Idées de saison</small></button>
+      </div>
+      <button class="btn block" data-action="creer">✍️ Écrire une recette à la main</button>`, action => {
+      if (action === 'creer') App.views.repas.editer(null);
+      else App.importUI.ouvrir(action);
+    });
+  },
   filtre: { q: '', cat: 'Tous', conseilles: false, favoris: false, stock: false, collection: null },
 
   render(state) {
@@ -10,9 +30,9 @@ App.views.repas = {
     const obj = App.suggest.objectif(App.store.semaine());
     const col = f.collection ? state.collections.find(c => c.id === f.collection) : null;
     return `
-      <div class="searchbar row-search">
-        <input type="search" name="q" placeholder="Rechercher un repas, un ingrédient…" value="${esc(f.q)}" autocomplete="off"/>
-        <button class="btn btn-primary btn-import" data-action="importer">⤓ Importer</button>
+      <div class="searchbar recherche">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input type="search" name="q" placeholder="Rechercher une recette, un ingrédient…" value="${esc(f.q)}" autocomplete="off" enterkeyhint="search"/>
       </div>
       <div class="collections scroll-x">
         ${state.collections.map(c => `
@@ -30,8 +50,7 @@ App.views.repas = {
         ${obj ? `<button class="chip chip-btn chip-good ${f.conseilles ? 'on' : ''}" data-action="conseilles">${obj.emoji} Conseillés</button>` : ''}
         ${cats.map(c => `<button class="chip chip-btn ${f.cat === c ? 'on' : ''}" data-action="cat" data-cat="${c}">${c}</button>`).join('')}
       </div>
-      <div id="repas-list">${App.views.repas.liste(state)}</div>
-      <button class="fab" data-action="nouveau" aria-label="Nouveau repas">＋</button>`;
+      <div id="repas-list">${App.views.repas.liste(state)}</div>`;
   },
 
   liste(state) {
@@ -57,25 +76,24 @@ App.views.repas = {
       ? '<p class="empty">Pas assez d’ingrédients au garde-manger pour l’instant.<br>Il se remplit avec « Courses faites ✓ ».</p>'
       : '<p class="empty">Aucun repas trouvé.</p>';
     const kcal = state.settings.calories;
-    return `<ul class="cards">${items.map(r => {
+    return `<ul class="grille-recettes">${items.map(r => {
       const c = cuisinable.get(r.id);
+      const conseil = App.suggest.conseille(r, obj);
       return `
-      <li class="card meal" data-action="detail" data-id="${r.id}">
-        <img class="thumb" src="${window.APP_DATA.imageRepas(r)}" alt="" loading="lazy"/>
-        <div class="grow">
-          <strong>${r.favori ? '<span class="star">★</span> ' : ''}${esc(r.nom)}</strong>
-          ${c ? `<small class="${c.ok ? 'ok' : 'muted'} for">${c.ok ? '🥫 Tout est à la maison' : `🥫 ${c.pct} % · manque : ${c.manque.slice(0, 3).map(esc).join(', ')}${c.manque.length > 3 ? '…' : ''}`}</small>`
-              : `<div class="chips small">${r.tags.slice(0, 3).map(t => App.commun.tag(t)).join('')}</div>`}
+      <li class="recette" data-action="detail" data-id="${r.id}">
+        <div class="recette-photo">
+          <img src="${window.APP_DATA.imageRepas(r)}" alt="" loading="lazy"/>
+          ${r.favori ? '<span class="recette-fav">★</span>' : ''}
+          ${conseil ? `<span class="recette-obj" title="Conseillé pour l’objectif">${obj.emoji}</span>` : ''}
         </div>
-        <div class="meal-side">
-          ${App.suggest.conseille(r, obj) ? `<span class="badge-good" title="Conseillé pour l’objectif">${obj.emoji}</span>` : ''}
-          ${r.avis === 'adore' ? '<span title="On adore">😍</span>' : ''}
-          <small class="muted">≈ ${euro(App.shopping.coutRepas(r, state))}</small>
-          ${kcal ? `<small class="muted">${App.nutrition.label(r)}</small>` : ''}
+        <div class="recette-corps">
+          <strong>${esc(r.nom)}</strong>
+          ${c ? `<small class="${c.ok ? 'ok' : 'muted'}">${c.ok ? '🥫 Tout est là' : `🥫 ${c.pct} % · manque ${esc(c.manque[0] || '')}${c.manque.length > 1 ? '…' : ''}`}</small>`
+              : `<small class="muted">${kcal && App.nutrition.parPortion(r) ? `${App.nutrition.label(r)} · ` : ''}≈ ${euro(App.shopping.coutRepas(r, state))}${r.avis === 'adore' ? ' · 😍' : ''}</small>`}
         </div>
       </li>`;
     }).join('')}</ul>
-      <p class="muted small center">${items.length} repas</p>`;
+      <p class="muted small center">${items.length} recette${items.length > 1 ? 's' : ''}</p>`;
   },
 
   mount(el, state) {
@@ -127,9 +145,10 @@ App.views.repas = {
 
       <div class="infos">
         <span>💶 ≈ ${euro(App.shopping.coutRepas(r, st))}</span>
-        ${st.settings.calories && App.nutrition.parPortion(r) ? `<span>🔥 ${App.nutrition.label(r)} / ${douceur ? 'part' : 'portion'}</span>` : ''}
-        <span class="${c.ok ? 'ok' : ''}">🥫 ${c.ok ? 'tout est à la maison' : `${c.pct} % à la maison`}</span>
+        <span>🍽️ ${r.categorie === 'Bébé' ? '1 repas' : douceur ? `${r.portions || 8} parts` : `${st.settings.portions} portions`}</span>
+        <span class="${c.ok ? 'ok' : ''}">🥫 ${c.ok ? 'Tout est à la maison' : c.pct ? `${c.pct} % des ingrédients à la maison` : 'À acheter'}</span>
       </div>
+      ${st.settings.calories && App.nutrition.parPortion(r) ? App.nutrition.bloc(App.nutrition.points(r), douceur ? 'Par part' : r.categorie === 'Bébé' ? 'Par repas' : 'Par portion') : ''}
 
       <button class="btn btn-primary block" data-action="cuisiner">👩‍🍳 Cuisiner (mode pas à pas)</button>
       ${r.cookidoo

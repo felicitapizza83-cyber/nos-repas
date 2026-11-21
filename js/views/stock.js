@@ -45,11 +45,14 @@ App.views.stock = {
       return ings.length ? `<optgroup label="${esc(ray)}">${ings.map(i => `<option value="${i.id}">${esc(i.nom)}</option>`).join('')}</optgroup>` : '';
     }).join('');
 
+    const vide = !Object.values(state.stock).some(e => e.qty > 0);
     return `
-      <section class="card">
-        <p class="small">Le garde-manger se remplit avec <strong>« Courses faites ✓ »</strong> et la commande La Fourche, et se vide tout seul quand un repas est passé. La liste de courses en tient compte.</p>
+      ${vide ? App.ui.vide('🥫', 'Le garde-manger est vide', 'Il se remplit tout seul avec « Courses faites ✓ » et la commande La Fourche, puis se vide à mesure que les repas passent. Vous pouvez aussi ajouter ce que vous avez déjà, en bas.',
+        '<a class="btn btn-primary" href="#/courses">Voir la liste de courses</a>')
+      : `<section class="card">
+        <p class="small">Il se remplit avec <strong>« Courses faites ✓ »</strong> et La Fourche, et se vide tout seul quand un repas est passé.</p>
         <p class="muted small">Corrigez-le de temps en temps (touchez un produit), surtout après un repas pas cuisiné ou un produit jeté.</p>
-      </section>
+      </section>`}
 
       ${vite.length ? `
         <h3 class="section-title">⏰ À utiliser vite</h3>

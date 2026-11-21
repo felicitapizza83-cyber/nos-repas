@@ -23,44 +23,80 @@ App.views.menu = {
     const moments = App.MOMENTS.filter(m => m.id === 'soir' || state.settings.midis);
 
     const bebe = state.settings.bebe && state.settings.bebe.actif;
-    const jours = App.JOURS.map((j, i) => `
-      <section class="card day ${i === today ? 'today' : ''} ${i < today ? 'past' : ''}">
-        <h3>${j.nom} <small class="muted">${App.u.dayDate(k, i)}</small></h3>
+    const kcal = state.settings.calories;
+    const jours = App.JOURS.map((j, i) => {
+      const t = kcal ? App.nutrition.jour(sem, j.id) : null;
+      return `
+      <section class="card day ${i === today ? 'today' : ''} ${i < today ? 'past' : ''}" id="jour-${j.id}">
+        <div class="day-tete"><h3>${j.nom} <small class="muted">${App.u.dayDate(k, i)}</small></h3>
+          ${i === today ? '<span class="pill good">Aujourd’hui</span>' : ''}
+          ${t && t.nb ? `<small class="muted day-kcal">≈ ${Math.round(t.kcal / 10) * 10} kcal · ${Math.round(t.p)} g prot.</small>` : ''}</div>
         ${moments.map(m => {
           const id = `${j.id}-${m.id}`, s = sem.slots[id];
           const r = s && s.repasId ? App.store.repas(s.repasId) : null;
           const cls = !s ? 'empty' : s.type;
           return `
             <button class="slot ${cls}" data-action="slot" data-slot="${id}">
-              <span class="slot-moment">${m.nom}</span>
-              ${r && s.type !== 'reporte' ? `<img class="thumb sm" src="${window.APP_DATA.imageRepas(r)}" alt="" loading="lazy"/>` : ''}
-              <span class="slot-body">${s ? App.views.menu.slotTexte(s) : '<span class="muted">+ Choisir</span>'}
+              ${r && s.type !== 'reporte' ? `<img class="thumb" src="${window.APP_DATA.imageRepas(r)}" alt="" loading="lazy"/>` : `<span class="thumb vide-thumb">${!s ? '＋' : s.type === 'ext' ? '🍽️' : s.type === 'restes' ? '♻️' : '💡'}</span>`}
+              <span class="slot-body"><small class="slot-moment">${m.nom}</small>
+                ${s ? App.views.menu.slotTexte(s) : '<span class="muted">Choisir un repas</span>'}
                 ${s && s.envieId ? '<small class="pill envie-pill">💡 envie</small>' : ''}
                 ${r && s.type === 'maison' && App.suggest.conseille(r, obj) ? `<small class="pill good">${obj.emoji}</small>` : ''}
               </span>
             </button>`;
         }).join('')}
         ${bebe ? App.views.menu.ligneBebe(sem, j) : ''}
-      </section>`).join('');
+      </section>`;
+    }).join('');
+
+    const bande = App.JOURS.map((j, i) => {
+      const plein = moments.every(m => sem.slots[`${j.id}-${m.id}`]);
+      return `<button class="bande-jour ${i === today ? 'today' : ''} ${plein ? 'plein' : ''}" data-action="aller-jour" data-j="${j.id}">
+        <small>${j.nom.slice(0, 3)}</small><strong>${new Date(App.u.parseKey(k).getTime() + i * 864e5).getDate()}</strong><i></i></button>`;
+    }).join('');
 
     return `
       ${App.commun.weekNav(k)}
-      ${obj ? `<button class="banner" data-action="go-objectif">${obj.emoji} Objectif : <strong>${esc(obj.nom)}</strong></button>`
-            : '<button class="banner muted" data-action="go-objectif">🌱 Aucun objectif choisi — en choisir un</button>'}
-      <div class="toolbar">
+      <div class="jours-bande">${bande}</div>
+      <div class="toolbar menu-actions">
         <button class="btn btn-primary" data-action="remplir">✨ Compléter le menu</button>
-        <button class="btn" data-action="menu-type">Menu type</button>
-        <button class="btn btn-ghost" data-action="vider" aria-label="Vider la semaine">Vider</button>
+        <button class="rond ${obj ? 'primary-soft' : ''}" data-action="go-objectif" aria-label="Objectif de la semaine" title="${obj ? esc(obj.nom) : 'Choisir un objectif'}">${obj ? obj.emoji : '🌱'}</button>
+        <button class="rond" data-action="options" aria-label="Plus d’options">⋯</button>
       </div>
       ${jours}
       ${App.views.menu.carteDouceurs(sem)}
-      ${bebe ? App.views.menu.carteBebe(state) : ''}
-      <label class="toggle-line">
-        <input type="checkbox" name="midis" ${state.settings.midis ? 'checked' : ''}/> Planifier aussi les midis
-      </label>
-      <label class="toggle-line">
-        <input type="checkbox" name="bebe" ${bebe ? 'checked' : ''}/> Planifier les repas de bébé
-      </label>`;
+      <a class="ligne-lien discret" href="#/reglages"><span class="grow">⚙️ Midis, bébé, gâteaux : réglages du menu</span><span class="chev">›</span></a>`;
+  },
+
+  /** Options du menu : menu type, objectif, gâteaux, vider. */
+  options() {
+    const sem = App.store.semaine();
+    App.ui.sheet(`
+      <h2>Options du menu</h2>
+      <div class="list-select">
+        <button class="option" data-action="menu-type">📋 <span class="grow">Appliquer un menu type<small class="muted block">Vos semaines habituelles</small></span></button>
+        <button class="option" data-action="objectif">🌱 <span class="grow">Objectif de la semaine</span></button>
+        <button class="option" data-action="alleger">💶 <span class="grow">Alléger le budget<small class="muted block">Remplace les plats proposés les plus chers</small></span></button>
+        <button class="option" data-action="douceurs">🍰 <span class="grow">${(sem.douceurs || []).length ? 'Changer les gâteaux' : 'Proposer les gâteaux'}</span></button>
+        <button class="option danger-opt" data-action="vider">🗑 <span class="grow">Vider la semaine</span></button>
+      </div>`, action => {
+      App.ui.closeSheet(true);
+      if (action === 'menu-type') App.views.menu.menuType();
+      if (action === 'objectif') App.router.go('objectif');
+      if (action === 'alleger') App.views.menu.alleger(true);
+      if (action === 'douceurs') App.store.update(s => App.suggest.proposerDouceurs(s, App.store.semaine()));
+      if (action === 'vider') App.ui.confirmSheet('Vider tout le menu de cette semaine ?', 'Vider', () =>
+        App.store.update(s => { const w = App.store.semaine(); Object.values(w.slots).forEach(x => App.stock.annulerConso(s, x)); w.slots = {}; }));
+    });
+  },
+
+  alleger(annoncer) {
+    let n = 0;
+    App.store.update(s => { n = App.suggest.alleger(s, App.store.semaine()); });
+    const b = App.budget.resume(App.store.semaine(), App.store.state);
+    if (n) App.ui.toast(`💶 ${n} plat${n > 1 ? 's' : ''} remplacé${n > 1 ? 's' : ''} : ${App.u.euro(b.total)} / ${App.u.euro(b.plafond)}`);
+    else if (annoncer) App.ui.toast(b.depasse ? 'Rien à alléger : les plats restants sont choisis par vous' : 'Le menu est déjà dans le budget 👍');
+    return n;
   },
 
   /** Ligne « 👶 Bébé » d'un jour : midi, goûter, soir. */
@@ -155,9 +191,16 @@ App.views.menu = {
       });
       else if (act === 'go-objectif') App.router.go('objectif');
       else if (act === 'remplir') {
-        let n = 0;
-        App.store.update(s => { n = App.suggest.remplir(s, App.store.semaine()); });
-        App.ui.toast(n ? `${n} repas proposés selon l’objectif — touchez-en un pour le changer` : 'Le menu est déjà complet');
+        let n = 0, m = 0;
+        App.store.update(s => { n = App.suggest.remplir(s, App.store.semaine()); m = App.suggest.alleger(s, App.store.semaine()); });
+        App.ui.haptique();
+        const b = App.budget.resume(App.store.semaine(), App.store.state);
+        App.ui.toast(n ? `✨ ${n} repas proposés · ${App.u.euro(b.total)} / ${App.u.euro(b.plafond)}${m && !b.depasse ? ' · budget respecté 👍' : b.depasse ? ' · « ⋯ › Alléger » pour réduire' : ''}` : 'Le menu est déjà complet');
+      }
+      else if (act === 'options') App.views.menu.options();
+      else if (act === 'aller-jour') {
+        const d = document.getElementById('jour-' + a.dataset.j);
+        if (d) window.scrollTo({ top: d.getBoundingClientRect().top + window.scrollY - 140, behavior: 'smooth' });
       }
       else if (act === 'menu-type') App.views.menu.menuType();
       else if (act === 'vider') App.ui.confirmSheet('Vider tout le menu de cette semaine ?', 'Vider', () =>

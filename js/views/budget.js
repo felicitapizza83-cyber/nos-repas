@@ -7,12 +7,12 @@ App.views.budget = {
   render(state) {
     const v = App.views.budget;
     return `
-      <div class="who center-who">
+      <div class="who center-who segment">
         <button class="seg ${v.mode === 'semaine' ? 'on' : ''}" data-action="mode" data-mode="semaine">Semaine</button>
         <button class="seg ${v.mode === 'annee' ? 'on' : ''}" data-action="mode" data-mode="annee">Année</button>
       </div>
       ${v.mode === 'annee' ? v.vueAnnee(state) : v.vueSemaine(state)}
-      ${v.reglages(state)}`;
+      <a class="ligne-lien discret" href="#/reglages"><span class="grow">⚙️ Budget, drive, La Fourche, sauvegarde : réglages</span><span class="chev">›</span></a>`;
   },
 
   vueSemaine(state) {
@@ -22,22 +22,33 @@ App.views.budget = {
     const hist = App.budget.historique(state, 8);
     const max = Math.max(state.settings.plafond, ...hist.map(h => h.total)) || 1;
     const lieu = (x, label) => `
-      <div class="row-between"><span>${label} ${x.reel ? '<small class="pill">ticket</small>' : '<small class="muted">(estimation)</small>'}</span><strong>${euro(x.montant)}</strong></div>
-      <form class="add-form" data-action="depense" data-lieu="${x.id}">
-        <input name="v" inputmode="decimal" placeholder="Montant réel (€)" value="${x.reel ? x.montant : ''}"/>
-        <button class="btn" type="submit">OK</button>
-      </form>`;
+      <button class="ligne-budget" data-action="ticket" data-lieu="${x.id}" data-label="${esc(label)}">
+        <span class="grow">${label}<small class="muted block">${x.reel ? '🧾 montant du ticket' : 'estimation · toucher pour saisir le ticket'}</small></span>
+        <strong>${euro(x.montant)}</strong><span class="chev">›</span>
+      </button>`;
+    const P = Math.max(b.plafond, b.total) || 1;
+    const seg = (v, cls) => v > 0 ? `<span class="${cls}" style="width:${(v / P * 100).toFixed(1)}%"></span>` : '';
 
     return `
       ${App.commun.weekNav(state.semaineActive)}
-      <section class="card budget-main ${b.depasse ? 'over' : ''}">
+      <section class="card budget-main ${b.depasse ? 'attention' : ''}">
         <small class="muted">Total de la semaine</small>
         <div class="big">${euro(b.total)} <small class="muted">/ ${euro(b.plafond)}</small></div>
-        ${App.commun.bar(b.pct, b.depasse)}
-        <p class="${b.depasse ? 'danger' : 'ok'}">${b.depasse ? `Dépassement de ${euro(-b.reste)}` : `Il reste ${euro(b.reste)}`}</p>
+        <div class="bar-empile">${seg(b.courses, 'c1')}${seg(b.fourche, 'c2')}${seg(b.extTotal, 'c3')}
+          ${b.depasse ? `<i style="left:${(b.plafond / P * 100).toFixed(1)}%"></i>` : ''}</div>
+        <div class="split ligne">
+          <span><i class="dot c1"></i>Courses ${euro(b.courses)}</span>
+          ${b.fourche ? `<span><i class="dot c2"></i>La Fourche ${euro(b.fourche)}</span>` : ''}
+          ${b.extTotal ? `<span><i class="dot c3"></i>Dehors ${euro(b.extTotal)}</span>` : ''}
+        </div>
+        ${b.depasse
+          ? `<div class="alerte-douce"><span class="grow">${euro(-b.reste)} au-dessus du budget</span>
+              <button class="btn btn-primary" data-action="alleger">Alléger le menu</button></div>`
+          : `<p class="ok">Il reste ${euro(b.reste)} 👍</p>`}
       </section>
 
-      <section class="card stack">
+      <h3 class="section-title">Par lieu d’achat</h3>
+      <section class="card liste-budget">
         ${lieu(b.lieux[0], '🧺 Producteur')}
         ${lieu(b.lieux[1], '🚗 Drive')}
         ${b.lieux[2].montant || b.lieux[2].reel ? lieu(b.lieux[2], '🍼 Orchestra') : ''}
@@ -120,35 +131,24 @@ App.views.budget = {
       </section>`;
   },
 
-  reglages(state) {
-    const { esc } = App.u;
-    return `
-      <h3 class="section-title">Réglages</h3>
-      <section class="card stack">
-        <label>Budget par semaine (€)<input name="plafond" inputmode="decimal" value="${state.settings.plafond}"/></label>
-        <label class="toggle-line"><input type="checkbox" name="fourcheDansBudget" ${state.settings.fourcheDansBudget ? 'checked' : ''}/> Inclure La Fourche dans le budget de la semaine</label>
-        <label class="toggle-line"><input type="checkbox" name="calories" ${state.settings.calories ? 'checked' : ''}/> Afficher les calories estimées des repas</label>
-        <label>Drive utilisé<select name="drive">${['Leclerc Drive ou Chronodrive', 'Leclerc Drive', 'Chronodrive'].map(d =>
-          `<option ${d === state.settings.drive ? 'selected' : ''}>${d}</option>`).join('')}</select></label>
-        <label>Portions par repas<input name="portions" inputmode="decimal" value="${state.settings.portions}"/>
-          <small class="muted">2 adultes ; passez à 2,5 si le bébé mange une part des plats.</small></label>
-        <div class="row">
-          <label class="grow">Prénom 1<input name="nom0" value="${esc(state.settings.noms[0])}"/></label>
-          <label class="grow">Prénom 2<input name="nom1" value="${esc(state.settings.noms[1])}"/></label>
+  /** Saisir le montant réel d'un ticket (producteur, drive, Orchestra). */
+  ticket(lieu, label) {
+    const dep = App.store.semaine().depenses || {};
+    App.ui.sheet(`
+      <h2>${App.u.esc(label)}</h2>
+      <p class="muted small">Montant réel payé cette semaine (ticket de caisse, récapitulatif du drive).</p>
+      <form data-action="ok" class="stack">
+        <input name="v" inputmode="decimal" placeholder="Montant (€)" value="${dep[lieu] != null ? dep[lieu] : ''}" autofocus/>
+        <div class="sheet-actions">
+          <button class="btn" type="button" data-action="effacer">Revenir à l’estimation</button>
+          <button class="btn btn-primary" type="submit">Enregistrer</button>
         </div>
-        <button class="btn" data-action="apparence">🎨 Apparence (couleur, clair / sombre) ›</button>
-        <button class="btn" data-action="ingredients">Ingrédients, prix & lieux d’achat ›</button>
-      </section>
-
-      <h3 class="section-title">Sauvegarde</h3>
-      <section class="card stack">
-        <small class="muted">Pour l’instant, chaque téléphone garde ses propres données. Exportez pour sauvegarder ou envoyer à l’autre téléphone.</small>
-        <div class="grid2">
-          <button class="btn" data-action="export">Exporter</button>
-          <label class="btn file-btn">Importer<input type="file" accept="application/json,.json" name="import" hidden/></label>
-        </div>
-        <button class="btn btn-ghost-danger" data-action="reset">Tout réinitialiser</button>
-      </section>`;
+      </form>`, (action, target) => {
+      if (action !== 'ok' && action !== 'effacer') return;
+      const v = action === 'ok' ? App.u.num(target.v.value) : null;
+      App.store.update(() => { App.store.semaine().depenses[lieu] = v; });
+      App.ui.closeSheet();
+    });
   },
 
   mount(el) {
@@ -184,6 +184,8 @@ App.views.budget = {
         App.router.render(true);
       }
       else if (act === 'go-fourche') App.router.go('fourche');
+      else if (act === 'alleger') App.views.menu.alleger(true);
+      else if (act === 'ticket') v.ticket(a.dataset.lieu, a.dataset.label);
       else if (act === 'ingredients') App.router.go('ingredients');
       else if (act === 'apparence') App.apparence.ouvrir(false);
       else if (act === 'export') {

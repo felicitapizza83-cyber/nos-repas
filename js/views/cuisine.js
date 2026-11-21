@@ -129,7 +129,7 @@ App.cuisine = {
         <strong class="grow">${esc(E.r.nom)}</strong>
       </header>
       <div class="cuisine-dots">${Array.from({ length: n }, (_, j) => `<span class="${j === E.i ? 'on' : j < E.i ? 'vu' : ''}"></span>`).join('')}</div>
-      <div class="cuisine-timers"></div>
+      <div class="cuisine-timers timers" data-minuteurs="cuisine">${App.minuteurs.lignes(false)}</div>
       <main class="cuisine-corps">${corps}</main>
       <footer class="cuisine-nav">
         <button class="btn" data-c="prec" ${E.i === 0 ? 'disabled' : ''}>‹ Précédent</button>
@@ -138,35 +138,8 @@ App.cuisine = {
     App.cuisine.majTimers();
   },
 
-  majTimers() {
-    const E = App.cuisine.etat;
-    if (!E) return;
-    const now = Date.now();
-    E.timers.forEach(t => {
-      if (!t.fini && now >= t.fin) { t.fini = true; App.cuisine.sonner(t); }
-    });
-    const zone = App.cuisine.el.querySelector('.cuisine-timers');
-    zone.innerHTML = E.timers.map((t, j) => {
-      const s = Math.max(0, Math.round((t.fin - now) / 1000));
-      const txt = t.fini ? 'Terminé !' : `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
-      return `<div class="timer ${t.fini ? 'fini' : ''}"><span>⏱ ${App.u.esc(t.label)}</span><strong>${txt}</strong>
-        <button class="icon-btn small" data-c="stop" data-j="${j}" aria-label="Arrêter">✕</button></div>`;
-    }).join('');
-  },
-
-  sonner(t) {
-    try {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      [0, 0.35, 0.7].forEach(d => {
-        const o = ctx.createOscillator(), g = ctx.createGain();
-        o.frequency.value = 880; o.connect(g); g.connect(ctx.destination);
-        g.gain.setValueAtTime(0.25, ctx.currentTime + d);
-        o.start(ctx.currentTime + d); o.stop(ctx.currentTime + d + 0.25);
-      });
-    } catch (e) { /* son indisponible */ }
-    try { navigator.vibrate && navigator.vibrate([300, 150, 300]); } catch (e) { /* */ }
-    App.ui.toast(`⏱ ${t.label} : c’est prêt !`);
-  },
+  /** Les minuteurs du mode cuisine sont les minuteurs de l'app : ils continuent après la fermeture. */
+  majTimers() { App.minuteurs.maj(); },
 
   onClick(e) {
     const a = e.target.closest('[data-c]');
@@ -177,11 +150,8 @@ App.cuisine = {
     if (c === 'suiv') return App.cuisine.aller(1);
     if (c === 'plus' || c === 'moins') { E.portions = Math.max(1, E.portions + (c === 'plus' ? 1 : -1)); return App.cuisine.dessiner(); }
     if (c === 'coche') { const id = a.dataset.id; E.coches.has(id) ? E.coches.delete(id) : E.coches.add(id); return App.cuisine.dessiner(); }
-    if (c === 'timer') {
-      E.timers.push({ label: a.dataset.label, fin: Date.now() + (+a.dataset.sec) * 1000, fini: false });
-      return App.cuisine.majTimers();
-    }
-    if (c === 'stop') { E.timers.splice(+a.dataset.j, 1); return App.cuisine.majTimers(); }
+    if (c === 'timer') return App.minuteurs.lancer(`${E.r.nom.split(/[,+(]/)[0].trim()} · ${a.dataset.label}`, +a.dataset.sec);
+    if (c === 'm') return App.minuteurs.clic(a);
     if (c === 'avis') {
       const v = a.dataset.v;
       App.store.update(() => { const r = App.store.repas(E.r.id); r.avis = r.avis === v ? null : v; });
