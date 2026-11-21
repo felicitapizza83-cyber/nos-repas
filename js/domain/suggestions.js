@@ -76,6 +76,42 @@ App.suggest = {
     return libres.length;
   },
 
+  /** Budget : remplace les plats choisis automatiquement les plus chers par des plats moins chers
+      (bien classés pour l'objectif et variés) jusqu'à repasser sous le budget. Renvoie le nombre de changements. */
+  alleger(state, semaine) {
+    const k = state.semaineActive;
+    let b = App.budget.resume(semaine, state, k);
+    if (!b.depasse) return 0;
+    const debut = App.u.isCurrentWeek(k) ? App.u.todayIndex() : (k < App.u.mondayOf() ? 7 : 0);
+    const cout = r => App.shopping.coutRepas(r, state);
+    const jourDe = id => App.JOURS.findIndex(j => id.startsWith(j.id + '-'));
+    let n = 0;
+    for (let it = 0; it < 14 && b.depasse; it++) {
+      const cases = Object.entries(semaine.slots)
+        .filter(([id, s]) => s && s.type === 'maison' && s.source === 'auto' && !id.includes('bebe') && jourDe(id) >= debut)
+        .map(([id, s]) => ({ id, r: App.store.repas(s.repasId) }))
+        .filter(x => x.r)
+        .sort((a, c) => cout(c.r) - cout(a.r));
+      const pris = new Set(Object.values(semaine.slots).map(s => s && s.repasId));
+      const classes = App.suggest.classer(state, semaine).slice(0, 45);
+      let fait = false;
+      for (const c of cases) {
+        const compte = {};
+        Object.entries(semaine.slots).forEach(([id, s]) => {
+          const r = id !== c.id && s && s.repasId && App.store.repas(s.repasId);
+          if (r && r.categorie !== 'Bébé') { const f = App.suggest.famille(r); compte[f] = (compte[f] || 0) + 1; }
+        });
+        const okFam = r => (compte[App.suggest.famille(r)] || 0) < (App.suggest.MAX_PAR_SEMAINE[App.suggest.famille(r)] ?? 3);
+        const cand = classes.filter(r => !pris.has(r.id) && okFam(r) && cout(r) < cout(c.r) - 1)
+          .slice(0, 12).sort((a, x) => cout(a) - cout(x))[0];
+        if (cand) { semaine.slots[c.id] = { ...semaine.slots[c.id], repasId: cand.id }; n++; fait = true; break; }
+      }
+      if (!fait) break;
+      b = App.budget.resume(semaine, state, k);
+    }
+    return n;
+  },
+
   /** Variété : nombre maximum de repas d'une même « famille » par semaine. */
   MAX_PAR_SEMAINE: {
     oeufs: 1, risotto: 1, pates: 3, soupe: 2, salade: 3, tarte: 1,
