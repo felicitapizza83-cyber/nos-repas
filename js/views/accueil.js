@@ -251,6 +251,17 @@ App.views.accueil = {
       if (!texte) return;
       let res = null, bilan = null;
       let consigne = App.consignes.analyser(texte, App.store.state);
+      // Avec l'IA : elle répond librement à tout (cuisine, invités, santé…) puis propose, sans rien changer d'elle-même.
+      // Seule une envie de plat très courte (« un bon poisson ») reste traitée directement sur le téléphone.
+      {
+        const { resultats } = App.suggest.analyserEnvie(texte, App.store.state);
+        const mots = App.u.norm(texte).split(/[^a-z0-9]+/).filter(m => m.length > 2).length;
+        const envieSimple = !consigne && resultats.length && mots <= 3 && !texte.includes('?');
+        if (App.ia.dispo() && !envieSimple) {
+          form.texte.value = '';
+          return App.ia.ouvrirDiscussion(texte);
+        }
+      }
       let iaRecettes = null;
       // Ce que l'app ne comprend pas seule (ou une longue phrase) part à l'IA ; le reste reste sur le téléphone
       const { resultats } = App.suggest.analyserEnvie(texte, App.store.state);

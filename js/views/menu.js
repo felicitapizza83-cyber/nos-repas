@@ -40,6 +40,7 @@ App.views.menu = {
               ${r && s.type !== 'reporte' ? `<img class="thumb" src="${window.APP_DATA.imageRepas(r)}" alt="" loading="lazy"/>` : `<span class="thumb vide-thumb">${!s ? '＋' : s.type === 'ext' ? '🍽️' : s.type === 'restes' ? '♻️' : '💡'}</span>`}
               <span class="slot-body"><small class="slot-moment">${m.nom}</small>
                 ${s ? App.views.menu.slotTexte(s) : '<span class="muted">Choisir un repas</span>'}
+                ${s && s.personnes ? `<small class="pill">👥 ${s.personnes} pers.</small>` : ''}
                 ${s && s.envieId ? '<small class="pill envie-pill">💡 envie</small>' : ''}
                 ${s && s.consigneId ? '<small class="pill envie-pill">📝 consigne</small>' : ''}
                 ${r && s.type === 'maison' && App.suggest.conseille(r, obj) ? `<small class="pill good">${obj.emoji}</small>` : ''}

@@ -59,7 +59,7 @@ App.views.reglages = {
 
       ${groupe('✨ Intelligence artificielle', `
         ${inter('ia', S.ia !== false, 'Utiliser l’IA (Gemini)', 'Photo → recette, phrases libres de l’accueil, idées de recettes')}
-        <small class="muted">Gratuit, via votre projet Firebase. Seuls la photo, le texte ou la phrase concernés sont envoyés à Google (jamais vos noms, pesées ou budget) ; avec l’offre gratuite, Google peut s’en servir pour améliorer ses modèles. Les phrases que l’app comprend seule (régimes, règles, fatigue…) restent sur le téléphone. Nécessite d’être connecté à la synchronisation.</small>
+        <small class="muted">Gratuit, via votre projet Firebase. Sont envoyés à Google : la photo, le texte ou la question, avec le menu prévu et les noms de vos recettes (jamais vos noms, pesées ou budget) ; avec l’offre gratuite, Google peut s’en servir pour améliorer ses modèles. Toutes les questions sont permises, y compris sur la santé. Nécessite d’être connecté à la synchronisation.</small>
         <small class="muted">Ce site est protégé par reCAPTCHA ; les <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">règles de confidentialité</a> et les <a href="https://policies.google.com/terms" target="_blank" rel="noopener">conditions d’utilisation</a> de Google s’appliquent.</small>`)}
 
       ${groupe('🔄 Synchronisation', `

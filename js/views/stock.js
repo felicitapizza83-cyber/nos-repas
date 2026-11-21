@@ -40,11 +40,6 @@ App.views.stock = {
           : '<p class="muted small empty-zone">Rien pour l’instant.</p>'}`;
     }).join('');
 
-    const options = window.APP_DATA.rayons.map(ray => {
-      const ings = state.ingredients.filter(i => i.rayon === ray);
-      return ings.length ? `<optgroup label="${esc(ray)}">${ings.map(i => `<option value="${i.id}">${esc(i.nom)}</option>`).join('')}</optgroup>` : '';
-    }).join('');
-
     const vide = !Object.values(state.stock).some(e => e.qty > 0);
     return `
       ${vide ? App.ui.vide('🥫', 'Le garde-manger est vide', 'Il se remplit tout seul avec « Courses faites ✓ » et la commande La Fourche, puis se vide à mesure que les repas passent. Vous pouvez aussi ajouter ce que vous avez déjà, en bas.',
@@ -70,12 +65,19 @@ App.views.stock = {
 
       <h3 class="section-title">Ajouter quelque chose qu’on a déjà</h3>
       <section class="card">
-        <form class="add-form" data-action="ajout">
-          <select name="ing" required><option value="">— produit —</option>${options}</select>
-          <input name="qte" inputmode="decimal" placeholder="Qté" class="prix"/>
-          <button class="btn btn-primary" type="submit">+</button>
+        <form class="ajout-stock" data-action="ajout" autocomplete="off">
+          <div class="recherche-ing">
+            <input name="cherche" placeholder="Tapez les premières lettres : pom, crè, riz…" autocomplete="off" autocapitalize="off" spellcheck="false"/>
+            <input type="hidden" name="ing"/>
+            <ul class="plain suggestions-ing" hidden></ul>
+          </div>
+          <div class="ajout-ligne">
+            <input name="qte" inputmode="decimal" placeholder="Qté" class="prix"/>
+            <select name="unite">${App.mesures.options(null, 'g')}</select>
+            <button class="btn btn-primary" type="submit" aria-label="Ajouter">＋</button>
+          </div>
         </form>
-        <small class="muted">En grammes, millilitres ou pièces selon le produit. Laisser vide pour un pot d’épices.</small>
+        <small class="muted">Choisissez l’unité qui vous arrange (kg, litre, pack, unité…) : l’app convertit. Vide = un paquet (ou « j’en ai » pour un pot d’épices).</small>
       </section>`;
   },
 
@@ -102,14 +104,52 @@ App.views.stock = {
       if (a.dataset.action === 'repas') App.views.repas.detail(a.dataset.id);
       if (a.dataset.action === 'ia-idees') App.ia.ouvrirIdees('stock');
     };
+    const form = el.querySelector('.ajout-stock');
+    if (form) {
+      const sug = form.querySelector('.suggestions-ing');
+      const choisir = ing => {
+        form.ing.value = ing ? ing.id : '';
+        if (ing) form.cherche.value = ing.nom;
+        form.unite.innerHTML = App.mesures.options(ing, ing ? App.mesures.defaut(ing, ing.pack) : 'g');
+        sug.hidden = true;
+      };
+      form.cherche.oninput = () => {
+        form.ing.value = '';
+        const t = form.cherche.value.trim();
+        const res = App.mesures.chercher(App.store.state, t);
+        const exact = res.some(i => App.u.norm(i.nom) === App.u.norm(t));
+        sug.innerHTML = res.map(i => `<li><button type="button" class="option" data-ing="${i.id}">${App.u.esc(i.nom)} <small class="muted">${App.u.esc(i.rayon || '')}</small></button></li>`).join('')
+          + (t.length >= 2 && !exact ? `<li><button type="button" class="option" data-nouveau="1">＋ Nouveau produit « ${App.u.esc(t)} »</button></li>` : '');
+        sug.hidden = !sug.innerHTML;
+        if (!res.length) form.unite.innerHTML = App.mesures.options(null, 'g');
+      };
+      sug.onclick = e => {
+        const b = e.target.closest('button');
+        if (!b) return;
+        if (b.dataset.ing) { choisir(App.store.ingredient(b.dataset.ing)); form.qte.focus(); }
+        else { sug.hidden = true; form.unite.innerHTML = App.mesures.options(null, 'g'); form.qte.focus(); }
+      };
+    }
     el.onsubmit = e => {
       e.preventDefault();
-      const f = e.target, id = f.ing.value;
-      if (!id) return;
-      const ing = App.store.ingredient(id);
-      const q = App.u.num(f.qte.value) ?? (ing.unite === 'pot' ? 1 : ing.pack);
-      App.store.update(s => App.stock.ajouter(s, { [id]: q }));
-      App.ui.toast(`${ing.nom} ajouté au garde-manger`);
+      const f = e.target;
+      const t = f.cherche.value.trim();
+      let ing = f.ing.value ? App.store.ingredient(f.ing.value)
+        : App.store.state.ingredients.find(i => App.u.norm(i.nom) === App.u.norm(t));
+      const q = App.u.num(f.qte.value);
+      if (!ing) {
+        if (t.length < 2) return App.ui.toast('Tapez le nom du produit');
+        // Nouveau produit : son unité de base suit l'unité choisie
+        const u = f.unite.value, base = ['g', 'kg'].includes(u) ? 'g' : ['ml', 'cl', 'l'].includes(u) ? 'ml' : 'pc';
+        ing = { id: 'perso-' + App.u.uid(), nom: t.charAt(0).toUpperCase() + t.slice(1), rayon: 'Divers', unite: base,
+          pack: base === 'pc' ? 1 : 500, prix: 0, placard: false, lieu: 'drive', kcal: null, stockMin: 0, importe: true };
+        const nouveau = ing;
+        App.store.update(s => { s.ingredients.push(nouveau); });
+      }
+      const qBase = q == null ? (ing.unite === 'pot' ? 1 : ing.pack) : App.mesures.versBase(ing, q, f.unite.value);
+      const id = ing.id;
+      App.store.update(s => App.stock.ajouter(s, { [id]: qBase }));
+      App.ui.toast(`${ing.nom} : ${ing.unite === 'pot' ? 'ajouté' : App.u.qte(qBase, ing.unite).replace('× ', '') + ' ajouté' + (ing.unite === 'pc' && qBase > 1 ? 's' : '')}`);
     };
   },
 
@@ -118,13 +158,17 @@ App.views.stock = {
     const ing = App.store.ingredient(id);
     const e = st.stock[id] || { qty: 0 };
     const pot = ing.unite === 'pot';
+    const u0 = App.mesures.defaut(ing, e.qty);
+    let uCour = u0;
     App.ui.sheet(`
       <h2>${App.u.esc(ing.nom)}</h2>
       <form data-action="save" class="stack">
-        ${pot ? '' : `<label>Quantité à la maison (${App.u.esc(ing.unite)})
-          <input name="qte" inputmode="decimal" value="${+e.qty.toFixed(1)}"/></label>
-          <label>Toujours en avoir au moins (${App.u.esc(ing.unite)}) — 0 = pas de minimum
-          <input name="min" inputmode="decimal" value="${ing.stockMin || 0}"/></label>`}
+        ${pot ? '' : `<label>Unité
+          <select name="unite" data-live="unite">${App.mesures.options(ing, u0)}</select></label>
+          <label>Quantité à la maison
+          <input name="qte" inputmode="decimal" value="${App.mesures.depuisBase(ing, e.qty, u0)}"/></label>
+          <label>Toujours en avoir au moins — 0 = pas de minimum
+          <input name="min" inputmode="decimal" value="${App.mesures.depuisBase(ing, ing.stockMin || 0, u0)}"/></label>`}
         <div class="grid2">
           ${pot ? '<button type="button" class="btn btn-primary" data-action="jai">J’en ai</button>'
                 : '<button class="btn btn-primary" type="submit">Enregistrer</button>'}
@@ -137,9 +181,20 @@ App.views.stock = {
         if (!s.stock[id]) s.stock[id] = { qty: 0, achatLe: Date.now() };
         s.stock[id].qty = Math.max(0, q);
       });
+      if (action === 'unite') {
+        // Changement d'unité : on convertit les nombres déjà affichés
+        const f = target.form, nv = target.value;
+        [f.qte, f.min].forEach(x => {
+          const n = App.u.num(x.value);
+          if (n != null) x.value = App.mesures.depuisBase(ing, App.mesures.versBase(ing, n, uCour), nv);
+        });
+        uCour = nv;
+        return;
+      }
       if (action === 'save') {
-        set(App.u.num(target.qte.value) || 0);
-        App.store.update(() => { App.store.ingredient(id).stockMin = App.u.num(target.min.value) || 0; });
+        const u = target.unite.value;
+        set(App.mesures.versBase(ing, App.u.num(target.qte.value) || 0, u));
+        App.store.update(() => { App.store.ingredient(id).stockMin = App.mesures.versBase(ing, App.u.num(target.min.value) || 0, u); });
       }
       else if (action === 'jai') set(1);
       else if (action === 'fini') set(0);
