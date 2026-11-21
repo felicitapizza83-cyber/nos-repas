@@ -1,6 +1,6 @@
 /* Service worker : garde l'app disponible hors-ligne (une fois hébergée en https).
    Changer VERSION à chaque mise à jour pour que les téléphones récupèrent les nouveaux fichiers. */
-const VERSION = 'nos-repas-v15';
+const VERSION = 'nos-repas-v16';
 const FICHIERS = [
   './', 'index.html', 'manifest.webmanifest',
   'css/base.css', 'css/components.css',
@@ -8,7 +8,7 @@ const FICHIERS = [
   'images/banana-bread.jpg', 'images/boeuf-riz.jpg', 'images/boulettes.jpg', 'images/brownie.jpg', 'images/carrot-cake.jpg', 'images/chili.jpg', 'images/clafoutis.jpg', 'images/cookies.jpg', 'images/crepes.jpg', 'images/crevettes.jpg', 'images/crumble.jpg', 'images/curry.jpg', 'images/fajitas.jpg', 'images/fondant.jpg', 'images/gateau-citron.jpg', 'images/gateau-pomme.jpg', 'images/gnocchi.jpg', 'images/lasagnes.jpg', 'images/legumes-four.jpg', 'images/lentilles.jpg', 'images/libanais.jpg', 'images/marche.jpg', 'images/muffins.jpg', 'images/omelette.jpg', 'images/paella.jpg', 'images/pates-viande.jpg', 'images/pates.jpg', 'images/poisson-legumes.jpg', 'images/poke.jpg', 'images/poulet.jpg', 'images/risotto.jpg', 'images/salade-pois-chiches.jpg', 'images/salade.jpg', 'images/saumon-riz.jpg', 'images/soupe.jpg', 'images/couscous.jpg', 'images/tajine.jpg', 'images/chakchouka.jpg', 'images/wok.jpg', 'images/pizza.jpg', 'images/burger.jpg', 'images/quiche.jpg', 'images/falafel.jpg', 'images/taboule.jpg', 'images/gratin.jpg', 'images/bowl.jpg',
   'js/utils.js', 'js/store.js', 'js/router.js', 'js/app.js', 'js/apparence.js', 'js/minuteurs.js', 'js/drawer.js', 'js/sync.js',
   'fonts/jost-latin.woff2', 'fonts/fraunces-latin.woff2',
-  'js/domain/shopping.js', 'js/domain/budget.js', 'js/domain/suggestions.js', 'js/domain/suivi.js', 'js/domain/stock.js', 'js/domain/nutrition.js', 'js/domain/import.js',
+  'js/domain/shopping.js', 'js/domain/budget.js', 'js/domain/suggestions.js', 'js/domain/suivi.js', 'js/domain/stock.js', 'js/domain/nutrition.js', 'js/domain/import.js', 'js/domain/consignes.js',
   'js/views/commun.js', 'js/views/accueil.js', 'js/views/objectif.js', 'js/views/repas.js',
   'js/views/menu.js', 'js/views/courses.js', 'js/views/budget.js',
   'js/views/suivi.js', 'js/views/fourche.js', 'js/views/ingredients.js', 'js/views/stock.js', 'js/views/cuisine.js', 'js/views/importer.js', 'js/views/reglages.js', 'js/views/aide.js',
