@@ -135,6 +135,7 @@ App.views.budget = {
           <label class="grow">Prénom 1<input name="nom0" value="${esc(state.settings.noms[0])}"/></label>
           <label class="grow">Prénom 2<input name="nom1" value="${esc(state.settings.noms[1])}"/></label>
         </div>
+        <button class="btn" data-action="apparence">🎨 Apparence (couleur, clair / sombre) ›</button>
         <button class="btn" data-action="ingredients">Ingrédients, prix & lieux d’achat ›</button>
       </section>
 
@@ -183,6 +184,7 @@ App.views.budget = {
       }
       else if (act === 'go-fourche') App.router.go('fourche');
       else if (act === 'ingredients') App.router.go('ingredients');
+      else if (act === 'apparence') App.apparence.ouvrir(false);
       else if (act === 'export') {
         const json = App.store.exportJSON();
         const file = new File([json], `nos-repas-${App.u.key(new Date())}.json`, { type: 'application/json' });
