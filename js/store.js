@@ -85,6 +85,15 @@
       state.ingredients.forEach(i => { if (i.rayon === 'Boucherie & volaille' && i.lieu === 'drive') i.lieu = 'boucherie'; });
       state.migrations.push('boucherie');
     }
+    // Essentiels : unité, taille du pack et consommation par semaine (pour compter ce qu'on a)
+    if (!state.migrations.includes('essentiels-qte')) {
+      state.essentiels.forEach(e => {
+        const d = D.essentiels.find(x => x.id === e.id);
+        if (d) { ['unite', 'pack', 'parSemaine'].forEach(k => { if (e[k] == null) e[k] = d[k]; }); if (d.id === 'eau') e.nom = d.nom; }
+        else { e.unite = e.unite || 'unité'; e.pack = e.pack || 1; e.parSemaine = e.parSemaine ?? 1; }
+      });
+      state.migrations.push('essentiels-qte');
+    }
     // Démarrage du foyer : le plan commence le lundi 23 novembre 2026
     if (!state.migrations.includes('debut-2026-11-23')) {
       if (!state.settings.debut) state.settings.debut = '2026-11-23';
