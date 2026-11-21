@@ -15,6 +15,8 @@
       fourcheDansBudget: true, // la commande La Fourche est répartie dans le budget de la semaine
       calories: true,          // afficher les calories estimées par portion
       bebe: { actif: true, naissance: null, orchestraParSemaine: 3 },
+      eauLitresParJour: 4,     // eau bue par jour pour le foyer (2 L chacun)
+      debut: null,             // lundi du début du suivi : les semaines d'avant sont ignorées
       noms: ['Elle', 'Lui'],
       moi: 0,                 // qui utilise ce téléphone
       question: 'Qu’est-ce qui vous ferait plaisir cette semaine ?',
@@ -46,6 +48,7 @@
       suivi: [[], []],         // pesées mensuelles de chaque personne
       stock: {},               // garde-manger : { ingId: { qty, achatLe } }
       collections: collectionsDeDepart(D.repas),
+      essentiels: structuredClone(D.essentiels),
       semaineActive: App.u.mondayOf(),
       dataVersion: D.version
     };
@@ -57,10 +60,10 @@
       envies: [],
       slots: {},
       douceurs: null,          // null = pas encore proposées
-      courses: { coches: {}, stock: {}, ajouts: [], auDrive: {}, restesJetes: {} },
+      courses: { coches: {}, stock: {}, ajouts: [], auDrive: {}, restesJetes: {}, maison: {} },
       achats: null,            // ce qui a été acheté (« Courses faites ✓ »)
       coursesFaitesLe: null,
-      depenses: { drive: null, producteur: null, orchestra: null }
+      depenses: { drive: null, producteur: null, orchestra: null, boucherie: null }
     };
   }
 
@@ -75,6 +78,18 @@
     state.suivi = state.suivi || [[], []];
     state.stock = state.stock || {};
     if (!state.collections) state.collections = collectionsDeDepart(state.repas);
+    if (!state.essentiels) state.essentiels = structuredClone(D.essentiels);
+    state.migrations = state.migrations || [];
+    // La viande s'achète à la boucherie halal (plus au drive)
+    if (!state.migrations.includes('boucherie')) {
+      state.ingredients.forEach(i => { if (i.rayon === 'Boucherie & volaille' && i.lieu === 'drive') i.lieu = 'boucherie'; });
+      state.migrations.push('boucherie');
+    }
+    // Démarrage du foyer : le plan commence le lundi 23 novembre 2026
+    if (!state.migrations.includes('debut-2026-11-23')) {
+      if (!state.settings.debut) state.settings.debut = '2026-11-23';
+      state.migrations.push('debut-2026-11-23');
+    }
 
     if ((state.dataVersion || 1) < D.version) {
       const nouveauxRepas = [];
@@ -100,6 +115,7 @@
     Object.values(state.semaines).forEach(w => {
       const n = nouvelleSemaine();
       w.courses = { ...n.courses, ...w.courses };
+      w.courses.maison = w.courses.maison || {};
       if (!w.depenses) w.depenses = { drive: w.depenseReelle ?? null, producteur: null };
       delete w.depenseReelle;
       if (!('douceurs' in w)) w.douceurs = null;
@@ -117,6 +133,8 @@
     if (!state.semaineActive || state.semaineActive < App.u.addWeeks(App.u.mondayOf(), -1)) {
       state.semaineActive = App.u.mondayOf();
     }
+    // Jamais avant le début du suivi
+    if (state.semaineActive < App.store.debut()) state.semaineActive = App.store.debut();
   }
 
   function save(depuisSync) {
@@ -157,6 +175,11 @@
     ingredient(id) { return state.ingredients.find(i => i.id === id); },
     objectif(id) { return state.objectifs.find(o => o.id === id); },
     moi() { return state.settings.noms[state.settings.moi] || 'Moi'; },
+    /** Lundi du début du suivi (« AAAA-MM-JJ ») : les semaines d'avant sont ignorées partout. */
+    debut() { return state && state.settings.debut ? App.u.mondayOf(App.u.parseKey(state.settings.debut)) : '0000-00-00'; },
+    /** Semaine « d'aujourd'hui » pour l'app : la semaine en cours, ou la première semaine du suivi. */
+    semaineDuJour() { const m = App.u.mondayOf(), d = App.store.debut(); return m < d ? d : m; },
+    compte(k) { return k >= App.store.debut(); },
 
     exportJSON() { return JSON.stringify(state, null, 2); },
     importJSON(txt) {
