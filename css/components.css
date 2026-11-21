@@ -666,3 +666,10 @@ small.block, .block { display: block; }
   .jours-bande { top: 62px; margin: 0 0 10px; padding: 6px 0 8px; }
   .sticky-bottom { bottom: 16px; }
 }
+
+/* ---------- Synchronisation ---------- */
+.sync-statut { display: block; font-size: .82rem; color: var(--muted); font-weight: 500; margin: 2px 0 8px; }
+.sync-statut.ok { color: var(--ok); }
+.sync-statut.erreur { color: var(--danger); }
+.sync-carte { background: var(--surface-2); box-shadow: none; display: flex; flex-direction: column; gap: 4px; margin-top: 12px; }
+.sync-carte strong { word-break: break-all; }
