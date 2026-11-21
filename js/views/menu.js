@@ -22,6 +22,7 @@ App.views.menu = {
     const today = App.u.isCurrentWeek(k) ? App.u.todayIndex() : -1;
     const moments = App.MOMENTS.filter(m => m.id === 'soir' || state.settings.midis);
 
+    const bebe = state.settings.bebe && state.settings.bebe.actif;
     const jours = App.JOURS.map((j, i) => `
       <section class="card day ${i === today ? 'today' : ''} ${i < today ? 'past' : ''}">
         <h3>${j.nom} <small class="muted">${App.u.dayDate(k, i)}</small></h3>
@@ -39,6 +40,7 @@ App.views.menu = {
               </span>
             </button>`;
         }).join('')}
+        ${bebe ? App.views.menu.ligneBebe(sem, j) : ''}
       </section>`).join('');
 
     return `
@@ -52,9 +54,85 @@ App.views.menu = {
       </div>
       ${jours}
       ${App.views.menu.carteDouceurs(sem)}
+      ${bebe ? App.views.menu.carteBebe(state) : ''}
       <label class="toggle-line">
         <input type="checkbox" name="midis" ${state.settings.midis ? 'checked' : ''}/> Planifier aussi les midis
+      </label>
+      <label class="toggle-line">
+        <input type="checkbox" name="bebe" ${bebe ? 'checked' : ''}/> Planifier les repas de bébé
       </label>`;
+  },
+
+  /** Ligne « 👶 Bébé » d'un jour : midi, goûter, soir. */
+  ligneBebe(sem, j) {
+    const { esc } = App.u;
+    return `
+      <div class="bebe-ligne">
+        <span class="bebe-icone" aria-hidden="true">👶</span>
+        ${App.MOMENTS_BEBE.map(m => {
+          const id = `${j.id}-${m.id}`, s = sem.slots[id];
+          const r = s && s.repasId ? App.store.repas(s.repasId) : null;
+          return `<button class="bebe-case ${r ? '' : 'vide'} ${r && r.source === 'orchestra' ? 'orch' : ''}" data-action="slot-bebe" data-slot="${id}">
+            <small>${m.nom}</small>
+            <span>${r ? esc(r.nom.replace(/^Purée (de |d’)?/i, '').replace(/^Compote (de )?/i, 'Compote ')) : '+'}</span>
+            ${r ? `<i>${r.source === 'orchestra' ? '🍼 Orchestra' : '🏠 maison'}</i>` : ''}
+          </button>`;
+        }).join('')}
+      </div>`;
+  },
+
+  carteBebe(state) {
+    const b = state.settings.bebe;
+    const age = App.suggest.ageBebe(state);
+    return `
+      <section class="card bebe-reglages">
+        <h3>👶 Repas de bébé</h3>
+        <div class="row">
+          <label class="grow">Né(e) en<input type="month" name="bebe-naissance" value="${b.naissance || ''}"/></label>
+          <label class="grow">Pots Orchestra / semaine<input name="bebe-orch" inputmode="numeric" value="${b.orchestraParSemaine}"/></label>
+        </div>
+        <small class="muted">${b.naissance ? `${age} mois : ` : 'Âge non indiqué (8 mois par défaut) : '}les purées proposées sont adaptées à son âge.</small>
+        <details class="reperes">
+          <summary>Repères pour les repas de bébé</summary>
+          <ul>
+            <li>Ni sel, ni sucre, ni miel avant 1 an.</li>
+            <li>1 cuillère à café d’huile de colza dans chaque purée de légumes.</li>
+            <li>Viande, poisson ou œuf : environ 10 g par jour vers 6-8 mois, 15-20 g vers 1 an, une seule fois par jour.</li>
+            <li>Purées maison : cuisson vapeur, puis congélation en bacs à glaçons (3 mois).</li>
+            <li>Pour les pots du commerce, vérifier l’âge indiqué sur l’étiquette.</li>
+            <li>Ces repères ne remplacent pas l’avis du pédiatre.</li>
+          </ul>
+        </details>
+      </section>`;
+  },
+
+  ouvrirCaseBebe(slotId) {
+    const st = App.store.state;
+    const { esc } = App.u;
+    const sem = App.store.semaine();
+    const s = sem.slots[slotId];
+    const m = App.MOMENTS_BEBE.find(x => slotId.endsWith(x.id));
+    const option = r => `<button class="option ${s && s.repasId === r.id ? 'on' : ''}" data-action="pick" data-id="${r.id}">
+        <span class="grow">${esc(r.nom)}</span><small class="muted">${r.ageMin} mois +</small></button>`;
+    const maison = App.suggest.repasBebe(st, m.type, 'maison');
+    const orch = App.suggest.repasBebe(st, m.type, 'orchestra');
+    App.ui.sheet(`
+      <h2>${esc(App.commun.slotLabel(slotId))}</h2>
+      ${s && s.repasId ? `<div class="chips"><button class="chip chip-btn" data-action="fiche">Voir la recette</button>
+        <button class="chip chip-btn" data-action="vider">Vider</button></div>` : ''}
+      <h3>🏠 Fait maison <small class="muted">· légumes du producteur</small></h3>
+      <div class="list-select">${maison.map(option).join('')}</div>
+      <h3>🍼 Acheté chez Orchestra</h3>
+      <div class="list-select">${orch.map(option).join('')}</div>`, (action, target) => {
+      const set = val => { App.store.update(st2 => {
+        const w = App.store.semaine();
+        App.stock.annulerConso(st2, w.slots[slotId]);
+        if (val) w.slots[slotId] = val; else delete w.slots[slotId];
+      }); App.ui.closeSheet(); };
+      if (action === 'pick') set({ type: 'maison', repasId: target.dataset.id, source: 'manuel' });
+      else if (action === 'vider') set(null);
+      else if (action === 'fiche') App.views.repas.detail(s.repasId);
+    });
   },
 
   mount(el) {
@@ -64,6 +142,7 @@ App.views.menu = {
       const act = a.dataset.action;
       if (App.commun.handle(act)) return;
       if (act === 'slot') App.views.menu.ouvrirCase(a.dataset.slot);
+      else if (act === 'slot-bebe') App.views.menu.ouvrirCaseBebe(a.dataset.slot);
       else if (act === 'douceur') App.views.repas.detail(a.dataset.id);
       else if (act === 'douceurs-proposer') App.store.update(s => App.suggest.proposerDouceurs(s, App.store.semaine()));
       else if (act === 'douceur-changer') {
@@ -85,7 +164,11 @@ App.views.menu = {
         App.store.update(s => { const w = App.store.semaine(); Object.values(w.slots).forEach(x => App.stock.annulerConso(s, x)); w.slots = {}; }));
     };
     el.onchange = e => {
-      if (e.target.name === 'midis') App.store.update(s => { s.settings.midis = e.target.checked; });
+      const t = e.target;
+      if (t.name === 'midis') App.store.update(s => { s.settings.midis = t.checked; });
+      if (t.name === 'bebe') App.store.update(s => { s.settings.bebe.actif = t.checked; });
+      if (t.name === 'bebe-naissance') App.store.update(s => { s.settings.bebe.naissance = t.value || null; });
+      if (t.name === 'bebe-orch') App.store.update(s => { s.settings.bebe.orchestraParSemaine = Math.max(0, Math.round(App.u.num(t.value) || 0)); });
     };
   },
 

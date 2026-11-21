@@ -5,7 +5,6 @@ App.views.courses = {
     { nom: 'Fruits de la semaine', prix: 10, lieu: 'producteur' },
     { nom: 'Pain', prix: 1.5, lieu: 'drive' },
     { nom: 'Lait infantile', prix: 15, lieu: 'drive' },
-    { nom: 'Petits pots / compotes bébé', prix: 6, lieu: 'drive' },
     { nom: 'Yaourts nature', prix: 2.5, lieu: 'drive' }
   ],
 
@@ -62,7 +61,7 @@ App.views.courses = {
         ${L.ajouts.length ? `<h3 class="section-title">En plus</h3><ul class="card list">${L.ajouts.map(ligneAjout).join('')}</ul>` : ''}`;
     };
 
-    const vide = !l.lieux.producteur.rayons.length && !l.lieux.drive.rayons.length && !l.fourche.length;
+    const vide = !l.lieux.producteur.rayons.length && !l.lieux.drive.rayons.length && !l.lieux.orchestra.rayons.length && !l.fourche.length;
 
     return `
       ${App.commun.weekNav(state.semaineActive)}
@@ -93,6 +92,7 @@ App.views.courses = {
 
       ${blocLieu('producteur', '🧺 Producteur', 'Fruits et légumes, chez le producteur à côté')}
       ${blocLieu('drive', '🚗 Drive', App.u.esc(state.settings.drive))}
+      ${blocLieu('orchestra', '🍼 Orchestra', 'Purées et compotes de bébé achetées')}
 
       ${l.fourche.length ? `
         <div class="lieu-head"><h2>🌾 La Fourche</h2><button class="link-btn" data-action="go-fourche">Commande de ${App.u.moisLabel(m).split(' ')[0]} ›</button></div>
@@ -109,7 +109,7 @@ App.views.courses = {
         <form class="add-form" data-action="ajout">
           <input name="nom" placeholder="Article…" autocomplete="off"/>
           <input name="prix" inputmode="decimal" placeholder="€" class="prix"/>
-          <select name="lieu" class="lieu-select"><option value="drive">Drive</option><option value="producteur">Producteur</option></select>
+          <select name="lieu" class="lieu-select"><option value="drive">Drive</option><option value="producteur">Producteur</option><option value="orchestra">Orchestra</option></select>
           <button class="btn btn-primary" type="submit">+</button>
         </form>
         <div class="chips">
@@ -188,6 +188,7 @@ App.views.courses = {
       <div class="list-select">
         <button class="option" data-action="lieu" data-lieu="drive">🚗 <span class="grow">Liste drive (${App.u.esc(st.settings.drive)})</span></button>
         <button class="option" data-action="lieu" data-lieu="producteur">🧺 <span class="grow">Liste producteur</span></button>
+        <button class="option" data-action="lieu" data-lieu="orchestra">🍼 <span class="grow">Liste Orchestra (bébé)</span></button>
       </div>
       <p class="muted small">Remplir automatiquement le panier drive viendra à l’étape suivante.</p>`, async (action, target) => {
       if (action !== 'lieu') return;

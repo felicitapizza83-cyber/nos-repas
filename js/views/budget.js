@@ -40,6 +40,7 @@ App.views.budget = {
       <section class="card stack">
         ${lieu(b.lieux[0], '🧺 Producteur')}
         ${lieu(b.lieux[1], '🚗 Drive')}
+        ${b.lieux[2].montant || b.lieux[2].reel ? lieu(b.lieux[2], '🍼 Orchestra') : ''}
       </section>
 
       ${state.settings.fourcheDansBudget ? `

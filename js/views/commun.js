@@ -31,8 +31,11 @@ App.commun = {
   },
 
   slotLabel(slotId) {
-    const [j, m] = slotId.split('-');
+    const [j, ...reste] = slotId.split('-');
+    const m = reste.join('-');
     const jour = App.JOURS.find(x => x.id === j);
-    return `${jour ? jour.nom : j} ${m === 'midi' ? 'midi' : 'soir'}`;
+    const nom = jour ? jour.nom : j;
+    if (m.startsWith('bebe-')) return `${nom} · bébé ${(App.MOMENTS_BEBE.find(x => x.id === m) || { nom: '' }).nom.toLowerCase()}`;
+    return `${nom} ${m === 'midi' ? 'midi' : 'soir'}`;
   }
 };

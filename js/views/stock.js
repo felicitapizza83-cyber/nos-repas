@@ -77,7 +77,7 @@ App.views.stock = {
 
   blocCuisinable(state) {
     const { esc } = App.u;
-    const liste = App.stock.avecCeQueJai(state, 75).filter(x => x.r.categorie !== 'Douceurs').slice(0, 6);
+    const liste = App.stock.avecCeQueJai(state, 75).filter(x => x.r.categorie !== 'Douceurs').slice(0, 6); // bébé déjà exclu
     if (!liste.length) return '';
     return `
       <h3 class="section-title">👩‍🍳 Cuisiner avec ce qu’on a</h3>

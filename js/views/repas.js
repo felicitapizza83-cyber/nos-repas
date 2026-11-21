@@ -10,8 +10,9 @@ App.views.repas = {
     const obj = App.suggest.objectif(App.store.semaine());
     const col = f.collection ? state.collections.find(c => c.id === f.collection) : null;
     return `
-      <div class="searchbar">
+      <div class="searchbar row-search">
         <input type="search" name="q" placeholder="Rechercher un repas, un ingrédient…" value="${esc(f.q)}" autocomplete="off"/>
+        <button class="btn btn-primary btn-import" data-action="importer">⤓ Importer</button>
       </div>
       <div class="collections scroll-x">
         ${state.collections.map(c => `
@@ -42,6 +43,7 @@ App.views.repas = {
     const cuisinable = new Map(f.stock ? App.stock.avecCeQueJai(state, 50).map(x => [x.r.id, x]) : []);
     let items = state.repas.filter(r => {
       if (f.cat !== 'Tous' && r.categorie !== f.cat) return false;
+      if (f.cat === 'Tous' && r.categorie === 'Bébé' && !f.q) return false;
       if (f.conseilles && !App.suggest.conseille(r, obj)) return false;
       if (f.favoris && !r.favori) return false;
       if (col && !col.repas.includes(r.id)) return false;
@@ -96,6 +98,7 @@ App.views.repas = {
       else if (act === 'collection-edit') App.views.repas.editerCollection(f.collection);
       else if (act === 'detail') App.views.repas.detail(a.dataset.id);
       else if (act === 'nouveau') App.views.repas.editer(null);
+      else if (act === 'importer') App.importUI.ouvrir('coller');
     };
   },
 
@@ -130,7 +133,7 @@ App.views.repas = {
 
       <button class="btn btn-primary block" data-action="cuisiner">👩‍🍳 Cuisiner (mode pas à pas)</button>
       ${r.cookidoo
-        ? `<a class="btn btn-cookidoo block" href="${esc(r.cookidoo)}" target="_blank" rel="noopener">Ouvrir la recette dans Cookidoo ↗</a>`
+        ? `<a class="btn ${/cookidoo/.test(r.cookidoo) ? 'btn-cookidoo' : ''} block" href="${esc(r.cookidoo)}" target="_blank" rel="noopener">${/cookidoo/.test(r.cookidoo) ? 'Ouvrir la recette dans Cookidoo' : 'Ouvrir la recette d’origine'} ↗</a>`
         : `<a class="link-btn" href="${App.views.repas.urlCookidoo(r.classique ? r.classique + ' healthy' : r.nom)}" target="_blank" rel="noopener">Chercher sur Cookidoo ↗</a>`}
 
       <div class="avis">
@@ -232,10 +235,12 @@ App.views.repas = {
     });
   },
 
-  editer(id, nomPrefill = '') {
+  /** Édition d'un repas. « brouillon » : fiche pré-remplie (import d'une recette), pas encore enregistrée. */
+  editer(id, nomPrefill = '', brouillon = null) {
     const st = App.store.state;
     const { esc } = App.u;
-    const r = id ? App.store.repas(id) : null;
+    const r = id ? App.store.repas(id) : brouillon;
+    const existant = !!(r && r.id);
     const rayons = window.APP_DATA.rayons;
 
     const options = sel => rayons.map(ray => {
@@ -255,14 +260,16 @@ App.views.repas = {
 
     const tags = Object.keys(window.APP_DATA.tags);
     const ov = App.ui.sheet(`
-      <h2>${r ? 'Modifier le repas' : 'Nouveau repas'}</h2>
+      <h2>${existant ? 'Modifier le repas' : brouillon ? 'Vérifier la recette importée' : 'Nouveau repas'}</h2>
+      ${brouillon ? '<p class="note">Vérifiez les ingrédients reconnus (ils servent à la liste de courses) puis enregistrez.</p>' : ''}
       <form data-action="save" class="stack">
         <label>Nom<input name="nom" required value="${esc(r ? r.nom : nomPrefill)}"/></label>
         <label>Catégorie<select name="categorie">${window.APP_DATA.categories.map(c =>
           `<option ${r && r.categorie === c ? 'selected' : ''}>${c}</option>`).join('')}</select></label>
         <fieldset><legend>Caractéristiques</legend><div class="chips">${tags.map(t =>
           `<label class="chip chip-check"><input type="checkbox" name="tag" value="${t}" ${r && r.tags.includes(t) ? 'checked' : ''}/>${esc(window.APP_DATA.tags[t])}</label>`).join('')}</div></fieldset>
-        <fieldset><legend>Ingrédients pour 2 personnes</legend>
+        <label>Nombre de portions de la recette<input name="portions" inputmode="numeric" value="${r && r.portions ? r.portions : 2}"/></label>
+        <fieldset><legend>Ingrédients</legend>
           <div class="ing-rows">${(r ? r.ingredients : [['', '']]).map(([iid, q]) => ligne(iid, q)).join('')}</div>
           <div class="row">
             <button type="button" class="link-btn" data-action="row-add">+ Ajouter un ingrédient</button>
@@ -281,10 +288,10 @@ App.views.repas = {
             <button type="button" class="btn" data-action="ing-new-save">Créer l’ingrédient</button>
           </div>
         </fieldset>
-        <label>Lien Cookidoo (copier depuis l’app Cookidoo › Partager)<input name="cookidoo" type="url" inputmode="url" placeholder="https://cookidoo.fr/recipes/recipe/fr-FR/…" value="${esc(r ? r.cookidoo || '' : '')}"/></label>
+        <label>Lien de la recette (Cookidoo, site, Instagram…)<input name="cookidoo" type="url" inputmode="url" placeholder="https://cookidoo.fr/recipes/recipe/fr-FR/…" value="${esc(r ? r.cookidoo || '' : '')}"/></label>
         <label>Notes / recette<textarea name="notes" rows="3">${esc(r ? r.notes : '')}</textarea></label>
         <button class="btn btn-primary" type="submit">Enregistrer</button>
-        ${r ? '<button type="button" class="btn btn-ghost-danger" data-action="delete">Supprimer ce repas</button>' : ''}
+        ${existant ? '<button type="button" class="btn btn-ghost-danger" data-action="delete">Supprimer ce repas</button>' : ''}
       </form>`, (action, target, ov) => {
       const rows = ov.querySelector('.ing-rows');
       if (action === 'row-add') { rows.insertAdjacentHTML('beforeend', ligne()); return; }
@@ -325,14 +332,15 @@ App.views.repas = {
         tags: [...f.querySelectorAll('[name=tag]:checked')].map(x => x.value),
         ingredients,
         notes: f.notes.value.trim(),
-        cookidoo: f.cookidoo.value.trim()
+        cookidoo: f.cookidoo.value.trim(),
+        portions: Math.max(1, Math.round(App.u.num(f.portions.value) || 2))
       };
       App.store.update(s => {
-        if (r) Object.assign(s.repas.find(x => x.id === r.id), data);
-        else s.repas.push({ id: App.u.uid(), portions: 2, ...data });
+        if (existant) Object.assign(s.repas.find(x => x.id === r.id), data);
+        else s.repas.push({ id: App.u.uid(), favori: false, avis: null, commentaire: '', ...data });
       });
       App.ui.closeSheet();
-      App.ui.toast(r ? 'Repas modifié' : 'Repas ajouté à la bibliothèque');
+      App.ui.toast(existant ? 'Repas modifié' : 'Recette ajoutée à la bibliothèque');
     });
 
     // Afficher l'unité quand on change d'ingrédient
