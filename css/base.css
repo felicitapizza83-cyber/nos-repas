@@ -11,24 +11,9 @@
   src: url(../fonts/fraunces-latin.woff2) format('woff2');
 }
 
-/* ---------- Palettes : chaque couleur a une version claire (-l) et sombre (-d) ----------
-   --p : couleur principale (boutons, navigation) · --a : accent (badges, aujourd'hui, envies).
-   Sans accent propre, l'accent reprend la couleur principale. Texte blanc lisible (contraste ≥ 4,5:1). */
-:root {
-  --a-l: var(--p-l); --as-l: var(--ps-l);
-  --a-d: var(--p-d); --as-d: var(--ps-d);
-}
-/* Marrakech (par défaut) : vert sauge des jardins, terracotta des tajines */
-:root, :root[data-couleur="marrakech"] {
-  --p-l: #3f6b4f; --ps-l: #e2ece4; --pi-l: #ffffff;
-  --p-d: #8fbf98; --ps-d: #1f3326; --pi-d: #0f2117;
-}
-:root[data-couleur="marrakech"] {
-  --a-l: #c2603a; --as-l: #f6e1d6;
-  --a-d: #e8916a; --as-d: #3d2419;
-}
-:root[data-couleur="orange"] {
-  --p-l: #b85410; --ps-l: #fde8d4; --pi-l: #ffffff;
+/* ---------- Palettes : chaque couleur a une version claire (-l) et sombre (-d) ---------- */
+:root, :root[data-couleur="orange"] {
+  --p-l: #ef7d16; --ps-l: #fde8d4; --pi-l: #ffffff;
   --p-d: #ff9b42; --ps-d: #3b2616; --pi-d: #1f1408;
 }
 :root[data-couleur="sauge"] {
@@ -63,8 +48,8 @@
   --primary: var(--p-l);
   --primary-soft: var(--ps-l);
   --primary-ink: var(--pi-l);
-  --accent: var(--a-l);
-  --accent-soft: var(--as-l);
+  --accent: var(--p-l);
+  --accent-soft: var(--ps-l);
   --danger: #c23b33;
   --danger-soft: #f8dfdc;
   --ok: #2f8a4e;
@@ -83,7 +68,7 @@
   :root:not([data-theme="light"]) {
     --bg: #141211; --surface: #1e1b1a; --surface-2: #292524; --text: #f4efeb; --muted: #aaa29d; --line: #36302e;
     --primary: var(--p-d); --primary-soft: var(--ps-d); --primary-ink: var(--pi-d);
-    --accent: var(--a-d); --accent-soft: var(--as-d);
+    --accent: var(--p-d); --accent-soft: var(--ps-d);
     --danger: #f0837a; --danger-soft: #3c2220; --ok: #7fd39a;
     --shadow: 0 1px 2px rgba(0, 0, 0, .35); --shadow-lg: 0 10px 40px rgba(0, 0, 0, .5);
     color-scheme: dark;
@@ -92,7 +77,7 @@
 :root[data-theme="dark"] {
   --bg: #141211; --surface: #1e1b1a; --surface-2: #292524; --text: #f4efeb; --muted: #aaa29d; --line: #36302e;
   --primary: var(--p-d); --primary-soft: var(--ps-d); --primary-ink: var(--pi-d);
-  --accent: var(--a-d); --accent-soft: var(--as-d);
+  --accent: var(--p-d); --accent-soft: var(--ps-d);
   --danger: #f0837a; --danger-soft: #3c2220; --ok: #7fd39a;
   --shadow: 0 1px 2px rgba(0, 0, 0, .35); --shadow-lg: 0 10px 40px rgba(0, 0, 0, .5);
   color-scheme: dark;
