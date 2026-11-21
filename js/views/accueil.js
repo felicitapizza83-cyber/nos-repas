@@ -15,8 +15,6 @@ App.views.accueil = {
     const obj = App.suggest.objectif(sem);
     const b = App.budget.resume(sem, state);
     const l = App.shopping.liste(sem, state);
-    const heure = new Date().getHours();
-    const salut = heure < 18 ? 'Bonjour' : 'Bonsoir';
     const nbRepas = Object.keys(sem.slots).length;
 
     // Ce qui est prévu aujourd'hui (seulement si on regarde la semaine en cours)
@@ -53,8 +51,8 @@ App.views.accueil = {
       return `
         <li class="envie">
           <div class="envie-head">
-            <span class="avatar">${esc((e.auteur || '?')[0])}</span>
-            <div class="grow"><strong>${esc(e.texte)}</strong><small class="muted">${esc(e.auteur)}</small></div>
+            <span class="avatar">💭</span>
+            <div class="grow"><strong>${esc(e.texte)}</strong></div>
             <button class="icon-btn small" data-action="envie-del" data-id="${e.id}" aria-label="Supprimer l’envie">🗑</button>
           </div>
           ${plan}
@@ -72,13 +70,6 @@ App.views.accueil = {
     }).join('');
 
     return `
-      <div class="hello">
-        <p class="muted">${salut},</p>
-        <div class="who">
-          ${state.settings.noms.map((n, i) =>
-            `<button class="seg ${i === state.settings.moi ? 'on' : ''}" data-action="moi" data-i="${i}">${esc(n)}</button>`).join('')}
-        </div>
-      </div>
 
       <section class="card hero">
         <img class="hero-img" src="images/${window.APP_DATA.images.accueil}.jpg" alt=""/>
@@ -93,7 +84,7 @@ App.views.accueil = {
       <section class="card link-card" data-action="go" data-route="objectif">
         <div class="grow">
           <small class="muted">Objectif de la semaine</small>
-          ${obj ? `<h3>${obj.emoji} ${esc(obj.nom)}</h3>${sem.objectifPar ? `<small class="muted">Choisi par ${esc(sem.objectifPar)}</small>` : ''}`
+          ${obj ? `<h3>${obj.emoji} ${esc(obj.nom)}</h3>`
                 : '<h3>À choisir 🌱</h3>'}
         </div><span class="chev">›</span>
       </section>
@@ -128,7 +119,6 @@ App.views.accueil = {
       if (!a) return;
       const act = a.dataset.action;
       if (act === 'go') App.router.go(a.dataset.route);
-      else if (act === 'moi') App.store.update(s => { s.settings.moi = +a.dataset.i; });
       else if (act === 'question') App.views.accueil.choisirQuestion();
       else if (act === 'envie-del') App.store.update(st => {
         const sem = App.store.semaine(); const e = sem.envies.find(x => x.id === a.dataset.id);
@@ -158,7 +148,7 @@ App.views.accueil = {
       let res = null;
       App.store.update(st => {
         const sem = App.store.semaine();
-        const e = { id: App.u.uid(), texte, auteur: App.store.moi(), date: Date.now() };
+        const e = { id: App.u.uid(), texte, date: Date.now() };
         sem.envies.push(e);
         res = App.suggest.placerEnvie(st, sem, e);
       });
@@ -188,16 +178,17 @@ App.views.accueil = {
   },
 
   carteSuivi(state) {
-    const i = state.settings.moi;
-    const s = App.suivi.resume(state, i);
-    const nom = App.u.esc(state.settings.noms[i]);
+    const lignes = state.settings.noms.map((nom, i) => {
+      const s = App.suivi.resume(state, i);
+      return { nom: App.u.esc(nom), s };
+    });
+    const aFaire = lignes.filter(x => x.s.aFaire).map(x => x.nom);
     return `
-      <section class="card link-card ${s.aFaire ? 'due' : ''}" data-action="go" data-route="suivi">
+      <section class="card link-card ${aFaire.length ? 'due' : ''}" data-action="go" data-route="suivi">
         <div class="grow">
-          <small class="muted">Suivi du mois · ${nom}</small>
-          ${s.aFaire ? '<h3>📏 C’est le moment de la pesée du mois</h3>'
-            : `<h3>${s.perdu > 0 ? `−${s.perdu.toFixed(1)} kg` : 'Suivi en cours'} <small class="muted">/ objectif −${s.objectifKg} kg</small></h3>
-               <small class="muted">Prochaine pesée vers le ${s.prochaine}</small>`}
+          <small class="muted">Suivi du mois</small>
+          ${aFaire.length ? `<h3>📏 Pesée du mois à faire : ${aFaire.join(' et ')}</h3>` : '<h3>📏 Suivi à jour</h3>'}
+          <small class="muted">${lignes.map(x => `${x.nom} ${x.s.perdu > 0 ? `−${x.s.perdu.toFixed(1)} kg` : '—'} / −${x.s.objectifKg} kg`).join(' · ')}</small>
         </div><span class="chev">›</span>
       </section>`;
   },

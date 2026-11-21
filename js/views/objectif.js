@@ -64,7 +64,7 @@ App.views.objectif = {
       const act = a.dataset.action;
       if (App.commun.handle(act)) return;
       if (act === 'choisir') App.store.update(() => {
-        const sem = App.store.semaine(); sem.objectifId = a.dataset.id; sem.objectifPar = App.store.moi();
+        const sem = App.store.semaine(); sem.objectifId = a.dataset.id;
       });
       else if (act === 'aucun') App.store.update(() => { const sem = App.store.semaine(); sem.objectifId = null; sem.objectifPar = null; });
       else if (act === 'edit') App.views.objectif.editer(a.dataset.id);
@@ -120,7 +120,7 @@ App.views.objectif = {
         else {
           const nouveau = { id: App.u.uid(), ...data };
           s.objectifs.push(nouveau);
-          const sem = App.store.semaine(); sem.objectifId = nouveau.id; sem.objectifPar = App.store.moi();
+          const sem = App.store.semaine(); sem.objectifId = nouveau.id;
         }
       });
       App.ui.closeSheet();
