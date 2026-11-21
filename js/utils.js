@@ -88,8 +88,32 @@ App.u = {
   }
 };
 
-/* ----- Feuilles modales (style iOS) et toasts ----- */
+/* ----- Feuilles modales (style iOS), toasts, retour tactile ----- */
 App.ui = {
+  /** Petit retour tactile : vibration (Android) ou « tic » d'interrupteur iOS (Safari 18+). */
+  haptique() {
+    try {
+      if (navigator.vibrate) { navigator.vibrate(12); return; }
+      let l = document.getElementById('haptique');
+      if (!l) {
+        l = document.createElement('label');
+        l.id = 'haptique';
+        l.style.cssText = 'position:fixed;left:-99px;top:0;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none';
+        l.innerHTML = '<input type="checkbox" switch tabindex="-1" aria-hidden="true">';
+        document.body.appendChild(l);
+      }
+      l.click();
+    } catch (e) { /* pas de retour tactile */ }
+  },
+
+  /** État vide illustré : grande icône dans un cercle doux, titre, texte et bouton. */
+  vide(icone, titre, texte, bouton = '') {
+    return `<section class="vide-illus">
+      <div class="vide-cercle"><span>${icone}</span></div>
+      <h3>${titre}</h3>${texte ? `<p class="muted">${texte}</p>` : ''}${bouton}
+    </section>`;
+  },
+
   sheet(html, handler) {
     App.ui.closeSheet(true);
     const ov = document.createElement('div');

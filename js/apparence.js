@@ -42,7 +42,6 @@ App.apparence = {
     try {
       matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => App.apparence.appliquer(App.apparence.lire()));
     } catch (e) { /* ancien navigateur */ }
-    document.getElementById('btn-apparence').onclick = () => App.apparence.ouvrir(false);
     if (!p.vu) setTimeout(() => App.apparence.ouvrir(true), 350);
   },
 
