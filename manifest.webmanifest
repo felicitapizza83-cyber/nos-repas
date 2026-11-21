@@ -1,13 +1,13 @@
 {
-  "name": "Nos repas",
-  "short_name": "Nos repas",
-  "description": "Menus de la semaine, liste de courses et budget — en douceur.",
+  "name": "Cook Easy",
+  "short_name": "Cook Easy",
+  "description": "Cook Easy — menus de la semaine, courses et budget, sans charge mentale.",
   "start_url": "./index.html#/accueil",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#f7f3ec",
-  "theme_color": "#4f7a5a",
+  "theme_color": "#f57c22",
   "lang": "fr",
   "icons": [
     { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },

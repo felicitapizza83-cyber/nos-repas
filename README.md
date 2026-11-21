@@ -1,4 +1,4 @@
-# Nos repas — prototype (étape 1)
+# Cook Easy
 
 Application web installable sur iPhone (PWA) pour alléger la charge mentale des repas :
 envies de la semaine → objectif naturopathie → menu → liste de courses → budget.
