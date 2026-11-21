@@ -86,7 +86,7 @@ App.stock = {
     const auj = App.u.key(new Date());
     let change = false;
     Object.entries(state.semaines).forEach(([k, w]) => {
-      if (k > App.u.mondayOf()) return;
+      if (k > App.u.mondayOf() || !App.store.compte(k)) return;
       App.JOURS.forEach((j, i) => {
         const d = App.u.parseKey(k); d.setDate(d.getDate() + i);
         if (App.u.key(d) >= auj) return; // le jour n'est pas encore terminé
@@ -115,7 +115,7 @@ App.stock = {
     let w = App.u.mondayOf();
     while (w < k) {
       const sem = state.semaines[w];
-      if (sem) {
+      if (sem && App.store.compte(w)) {
         const b = App.shopping.besoins(sem, state, true);
         Object.entries(b).forEach(([id, x]) => { if (s[id]) s[id] = Math.max(0, s[id] - x.qty); });
       }

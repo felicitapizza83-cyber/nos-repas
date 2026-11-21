@@ -3,7 +3,7 @@ App.budget = {
   resume(semaine, state, k = state.semaineActive) {
     const l = App.shopping.liste(semaine, state, k);
     const dep = semaine.depenses || {};
-    const lieux = ['producteur', 'drive', 'orchestra'].map(id => {
+    const lieux = App.shopping.LIEUX.map(id => {
       const reel = dep[id] != null;
       return { id, estime: l.lieux[id].total, reel, montant: reel ? dep[id] : l.lieux[id].total };
     });
@@ -31,7 +31,7 @@ App.budget = {
   /** Une semaine compte dans les bilans si elle a un menu ou une dépense saisie. */
   active(w) {
     return w && (Object.keys(w.slots).length || (w.douceurs || []).length ||
-      (w.depenses && (w.depenses.drive != null || w.depenses.producteur != null || w.depenses.orchestra != null)));
+      (w.depenses && App.shopping.LIEUX.some(l => w.depenses[l] != null)));
   },
 
   historique(state, n = 8) {
@@ -39,7 +39,7 @@ App.budget = {
     let k = state.semaineActive;
     for (let i = 0; i < n; i++) {
       const w = state.semaines[k];
-      if (App.budget.active(w)) res.unshift({ k, ...App.budget.resume(w, state, k) });
+      if (App.store.compte(k) && App.budget.active(w)) res.unshift({ k, ...App.budget.resume(w, state, k) });
       else res.unshift({ k, total: 0, vide: true, plafond: state.settings.plafond });
       k = App.u.addWeeks(k, -1);
     }
@@ -54,7 +54,7 @@ App.budget = {
       let courses = 0, ext = 0, estime = false, nbSemaines = 0;
       App.u.semainesDuMois(m).forEach(k => {
         const w = state.semaines[k];
-        if (!App.budget.active(w)) return;
+        if (!App.store.compte(k) || !App.budget.active(w)) return;
         const r = App.budget.resume(w, state, k);
         nbSemaines++;
         courses += r.courses; ext += r.extTotal;

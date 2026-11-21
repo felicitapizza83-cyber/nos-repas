@@ -6,6 +6,20 @@
      de la liste de la semaine suivante ;
    - l'épicerie sèche bio (La Fourche) est commandée une fois par mois : voir fourcheMois(). */
 App.shopping = {
+  /** Lieux où l'on fait les courses chaque semaine (La Fourche est mensuelle). */
+  LIEUX: ['producteur', 'boucherie', 'drive', 'orchestra'],
+  NOMS_LIEUX: { producteur: 'Producteur', boucherie: 'Boucherie halal', orchestra: 'Orchestra (bébé)' },
+
+  /** Essentiels de la maison marqués « à acheter » cette semaine (eau calculée selon les litres par jour). */
+  essentiels(semaine, state) {
+    const m = (semaine.courses && semaine.courses.maison) || {};
+    return (state.essentiels || []).filter(e => m[e.id] === 'acheter').map(e => {
+      const packs = e.auto === 'eau' ? Math.max(1, Math.ceil((state.settings.eauLitresParJour || 0) * 7 / 9 - 1e-9)) : 1;
+      return { id: 'ess-' + e.id, ess: e.id, nom: e.nom, emoji: e.emoji, lieu: e.lieu || 'drive', packs,
+        cout: packs * (e.prix || 0), coche: !!semaine.courses.coches['ess-' + e.id] };
+    });
+  },
+
   compteDansCourses(slot) {
     if (!slot || !slot.repasId) return false;
     return slot.type === 'reporte' || slot.type === 'maison';
@@ -104,23 +118,25 @@ App.shopping = {
     };
 
     const hebdo = items.filter(i => i.lieu !== 'fourche');
+    const ess = App.shopping.essentiels(semaine, state);
     const lieux = {};
-    ['producteur', 'drive', 'orchestra'].forEach(l => {
+    App.shopping.LIEUX.forEach(l => {
       const its = hebdo.filter(i => i.lieu === l && !i.placard);
       const ajouts = c.ajouts.filter(a => (a.lieu || 'drive') === l);
+      const maison = ess.filter(e => e.lieu === l);
       const total = its.filter(i => !i.enStock).reduce((s, i) => s + i.cout, 0) +
-        ajouts.reduce((s, a) => s + (a.prix || 0), 0) +
+        ajouts.reduce((s, a) => s + (a.prix || 0), 0) + maison.reduce((s, e) => s + e.cout, 0) +
         (l === 'drive' ? hebdo.filter(i => i.placard && !i.enStock).reduce((s, i) => s + i.cout, 0) : 0);
-      lieux[l] = { rayons: grouper(its), ajouts, total };
+      lieux[l] = { rayons: grouper(its), ajouts, maison, total };
     });
     const placard = hebdo.filter(i => i.placard).sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
     const fourche = items.filter(i => i.lieu === 'fourche').sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
     const nbDeduits = items.filter(i => i.reste > 0).length;
 
     const aAcheter = hebdo.filter(i => !i.enStock);
-    const total = lieux.producteur.total + lieux.drive.total + lieux.orchestra.total;
-    const nb = aAcheter.length + c.ajouts.length;
-    const nbCoches = aAcheter.filter(i => i.coche).length + c.ajouts.filter(a => a.coche).length;
+    const total = App.shopping.LIEUX.reduce((s, l) => s + lieux[l].total, 0);
+    const nb = aAcheter.length + c.ajouts.length + ess.length;
+    const nbCoches = aAcheter.filter(i => i.coche).length + c.ajouts.filter(a => a.coche).length + ess.filter(e => e.coche).length;
     return { lieux, placard, fourche, nbDeduits, total, nb, nbCoches, aAcheter, dispo };
   },
 
@@ -136,7 +152,7 @@ App.shopping = {
   texte(semaine, state, lieu) {
     const l = App.shopping.liste(semaine, state);
     const L = l.lieux[lieu];
-    const nomLieu = lieu === 'drive' ? state.settings.drive : lieu === 'orchestra' ? 'Orchestra (bébé)' : 'Producteur';
+    const nomLieu = lieu === 'drive' ? state.settings.drive : App.shopping.NOMS_LIEUX[lieu] || lieu;
     const lignes = [`🛒 ${nomLieu} — ${App.u.weekLabel(state.semaineActive)}`];
     L.rayons.forEach(r => {
       const it = r.items.filter(i => !i.enStock);
@@ -148,6 +164,7 @@ App.shopping = {
       const pl = l.placard.filter(i => !i.enStock);
       if (pl.length) { lignes.push('', 'PLACARD'); pl.forEach(i => lignes.push(`▫️ ${i.nom}`)); }
     }
+    if (L.maison.length) { lignes.push('', 'MAISON'); L.maison.forEach(e => lignes.push(`${e.coche ? '✅' : '▫️'} ${e.nom}${e.packs > 1 ? ` × ${e.packs}` : ''}`)); }
     if (L.ajouts.length) { lignes.push('', 'EN PLUS'); L.ajouts.forEach(a => lignes.push(`${a.coche ? '✅' : '▫️'} ${a.nom}`)); }
     lignes.push('', `Estimation : ${App.u.euro(L.total)}`);
     return lignes.join('\n');
@@ -167,6 +184,7 @@ App.shopping = {
     const semaines = App.u.semainesDuMois(m);
     const prevues = semaines.filter(k => {
       const w = state.semaines[k];
+      if (!App.store.compte(k)) return false;
       return w && (Object.keys(w.slots).length || (w.douceurs || []).length);
     });
     const besoins = {};

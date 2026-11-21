@@ -60,6 +60,17 @@ App.suggest = {
     const pris = new Set(Object.values(semaine.slots).map(s => s && s.repasId));
     let precedent = null;
     libres.forEach(id => {
+      // Case couverte par une consigne (végétarien, règles…) : le choix suit la consigne
+      const R = App.consignes.pour(state, semaine, id);
+      if (R) {
+        const rc = App.consignes.choisir(state, semaine, R, id);
+        if (rc) {
+          semaine.slots[id] = { type: 'maison', repasId: rc.id, source: 'auto' };
+          pris.add(rc.id);
+          const f = App.suggest.famille(rc); compte[f] = (compte[f] || 0) + 1; precedent = f;
+          return;
+        }
+      }
       const ok = r => !pris.has(r.id)
         && (compte[App.suggest.famille(r)] || 0) < (App.suggest.MAX_PAR_SEMAINE[App.suggest.famille(r)] ?? 3)
         && App.suggest.famille(r) !== precedent; // pas deux fois la même famille d'affilée
@@ -102,7 +113,7 @@ App.suggest = {
           if (r && r.categorie !== 'Bébé') { const f = App.suggest.famille(r); compte[f] = (compte[f] || 0) + 1; }
         });
         const okFam = r => (compte[App.suggest.famille(r)] || 0) < (App.suggest.MAX_PAR_SEMAINE[App.suggest.famille(r)] ?? 3);
-        const cand = classes.filter(r => !pris.has(r.id) && okFam(r) && cout(r) < cout(c.r) - 1)
+        const cand = classes.filter(r => !pris.has(r.id) && okFam(r) && cout(r) < cout(c.r) - 1 && App.consignes.permis(state, semaine, c.id, r))
           .slice(0, 12).sort((a, x) => cout(a) - cout(x))[0];
         if (cand) { semaine.slots[c.id] = { ...semaine.slots[c.id], repasId: cand.id }; n++; fait = true; break; }
       }
@@ -358,12 +369,13 @@ App.suggest = {
   /** Avant de compléter le menu : chaque envie non placée trouve sa place. */
   placerEnvies(state, semaine) {
     (semaine.envies || []).forEach(e => {
-      if (!e.retiree && !App.suggest.envieAuMenu(semaine, e)) App.suggest.placerEnvie(state, semaine, e);
+      if (!e.consigne && !e.retiree && !App.suggest.envieAuMenu(semaine, e)) App.suggest.placerEnvie(state, semaine, e);
     });
   },
 
   /** Retire le plat d'une envie du menu (la case redevient libre). */
   retirerEnvie(state, semaine, e) {
+    if (e.consigne) return App.consignes.annuler(state, semaine, e);
     if (e.douceurId) semaine.douceurs = (semaine.douceurs || []).filter(x => x !== e.douceurId);
     else if (e.slotId && semaine.slots[e.slotId] && semaine.slots[e.slotId].envieId === e.id) {
       App.stock.annulerConso(state, semaine.slots[e.slotId]);
