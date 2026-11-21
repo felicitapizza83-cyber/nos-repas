@@ -31,7 +31,7 @@ App.drawer = {
       <div class="drawer-panneau" role="dialog" aria-label="Menu">
         <div class="d-tete">
           <img src="icons/icon-192.png" alt=""/>
-          <div class="grow"><strong>Nos repas</strong><small>${App.u.esc(st.settings.noms.join(' & '))} · 👶</small></div>
+          <div class="grow"><strong>Cook Easy</strong><small>${App.u.esc(st.settings.noms.join(' & '))} · 👶</small></div>
           <button class="rond" data-d="fermer" aria-label="Fermer">✕</button>
         </div>
 

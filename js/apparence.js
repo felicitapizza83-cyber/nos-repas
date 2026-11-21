@@ -53,7 +53,7 @@ App.apparence = {
       <div class="apparence">
         ${bienvenue ? `
           <img class="apparence-logo" src="icons/icon-192.png" alt=""/>
-          <h2>Bienvenue dans Nos repas</h2>
+          <h2>Bienvenue dans Cook Easy</h2>
           <p class="intro">Menus de la semaine, courses, garde-manger et budget — en douceur.<br>Choisissez d’abord le style de votre app.</p>`
         : '<h2>Apparence</h2><p class="intro">Propre à ce téléphone : chacun peut choisir son style.</p>'}
 
