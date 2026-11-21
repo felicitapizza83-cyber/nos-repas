@@ -1,12 +1,12 @@
 /* Éléments partagés entre écrans : sélecteur de semaine, chips, icônes. */
 App.commun = {
   weekNav(k) {
-    const courante = App.u.isCurrentWeek(k);
+    const courante = k === App.store.semaineDuJour();
     return `
       <div class="weeknav">
-        <button class="icon-btn" data-action="week-prev" aria-label="Semaine précédente">‹</button>
+        <button class="icon-btn" data-action="week-prev" aria-label="Semaine précédente" ${k <= App.store.debut() ? 'disabled style="opacity:.3"' : ''}>‹</button>
         <div class="weeknav-label">
-          <strong>${courante ? 'Cette semaine' : 'Semaine'}</strong>
+          <strong>${courante ? (App.u.isCurrentWeek(k) ? 'Cette semaine' : 'Première semaine') : 'Semaine'}</strong>
           <span>${App.u.weekLabel(k)}</span>
         </div>
         <button class="icon-btn" data-action="week-next" aria-label="Semaine suivante">›</button>
@@ -17,9 +17,9 @@ App.commun = {
   /** Gère les actions communes ; renvoie true si l'action a été traitée. */
   handle(action) {
     const st = App.store.state;
-    if (action === 'week-prev') App.store.update(s => { s.semaineActive = App.u.addWeeks(s.semaineActive, -1); });
+    if (action === 'week-prev') { if (st.semaineActive <= App.store.debut()) return st; App.store.update(s => { s.semaineActive = App.u.addWeeks(s.semaineActive, -1); }); }
     else if (action === 'week-next') App.store.update(s => { s.semaineActive = App.u.addWeeks(s.semaineActive, 1); });
-    else if (action === 'week-today') App.store.update(s => { s.semaineActive = App.u.mondayOf(); });
+    else if (action === 'week-today') App.store.update(s => { s.semaineActive = App.store.semaineDuJour(); });
     else return false;
     return st;
   },

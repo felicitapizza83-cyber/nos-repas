@@ -16,10 +16,14 @@ App.views.reglages = {
           <label class="grow">Prénom 1<input name="nom0" value="${esc(S.noms[0])}"/></label>
           <label class="grow">Prénom 2<input name="nom1" value="${esc(S.noms[1])}"/></label>
         </div>
+        <label>Eau bue par jour pour le foyer (litres)<input name="eauLitresParJour" inputmode="decimal" value="${S.eauLitresParJour ?? 4}"/>
+          <small class="muted">Sert à calculer les packs d’eau de la semaine (onglet Maison des courses).</small></label>
         <label>Portions par repas<input name="portions" inputmode="decimal" value="${S.portions}"/>
           <small class="muted">2 adultes ; passez à 2,5 si bébé mange une part des plats.</small></label>`)}
 
       ${groupe('📅 Menu de la semaine', `
+        <label>Début du suivi<input type="date" name="debut" value="${S.debut || ''}"/>
+          <small class="muted">Les semaines d’avant sont ignorées (menu, courses, budget, bilans).</small></label>
         ${inter('midis', S.midis, 'Planifier aussi les midis')}
         <label>Gâteaux healthy par semaine<input name="douceursParSemaine" inputmode="numeric" value="${S.douceursParSemaine}"/></label>`)}
 
@@ -77,6 +81,11 @@ App.views.reglages = {
       const n = v => App.u.num(v);
       if (t.name === 'nom0' || t.name === 'nom1') set(s => { const i = +t.name.slice(-1); s.noms[i] = t.value.trim() || s.noms[i]; });
       if (t.name === 'portions') set(s => { s.portions = n(t.value) || 2; });
+      if (t.name === 'eauLitresParJour') set(s => { s.eauLitresParJour = Math.max(0, n(t.value) ?? 0); });
+      if (t.name === 'debut') App.store.update(st => {
+        st.settings.debut = t.value || null;
+        if (st.semaineActive < App.store.debut()) st.semaineActive = App.store.debut();
+      });
       if (t.name === 'midis') set(s => { s.midis = t.checked; });
       if (t.name === 'douceursParSemaine') set(s => { s.douceursParSemaine = Math.max(0, Math.round(n(t.value) ?? 2)); });
       if (t.name === 'bebe') set(s => { s.bebe.actif = t.checked; });

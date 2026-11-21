@@ -10,6 +10,7 @@ App.views.courses = {
 
   magasin: false,
   verrou: null,
+  onglet: 'repas',
 
   tete() {
     return `<button class="rond" data-action="partager" aria-label="Partager la liste">
@@ -58,10 +59,19 @@ App.views.courses = {
     // Les articles pris descendent en bas de leur rayon
     const trier = items => items.slice().sort((x, y) => (x.coche || x.enStock ? 1 : 0) - (y.coche || y.enStock ? 1 : 0));
 
+    const ligneEss = e => `
+      <li class="item ${e.coche ? 'done' : ''}" data-swipe="ess" data-id="${e.ess}">
+        <label class="check">
+          <input type="checkbox" data-kind="ess" data-id="${e.ess}" ${e.coche ? 'checked' : ''}/>
+          <span class="grow"><strong>${e.emoji} ${esc(e.nom)}</strong> ${e.packs > 1 ? `<span class="muted">× ${e.packs}</span>` : ''}</span>
+        </label>
+        <div class="item-side"><small>${euro(e.cout)}</small></div>
+      </li>`;
+
     const blocLieu = (id, titre, sousTitre) => {
       const L = l.lieux[id];
       const placard = id === 'drive' ? l.placard : [];
-      if (!L.rayons.length && !L.ajouts.length && !placard.length) return '';
+      if (!L.rayons.length && !L.ajouts.length && !placard.length && !L.maison.length) return '';
       return `
         <div class="lieu-head"><h2>${titre}</h2><strong>${euro(L.total)}</strong></div>
         ${sousTitre && !V.magasin ? `<small class="muted lieu-sub">${sousTitre}</small>` : ''}
@@ -70,18 +80,27 @@ App.views.courses = {
           <ul class="card list">${trier(r.items).map(ligne).join('')}</ul>`).join('')}
         ${placard.length && !V.magasin ? `<h3 class="section-title">À vérifier dans les placards</h3>
           <ul class="card list">${placard.map(ligne).join('')}</ul>` : ''}
+        ${L.maison.length ? `<h3 class="section-title">🧻 Maison</h3><ul class="card list">${trier(L.maison).map(ligneEss).join('')}</ul>` : ''}
         ${L.ajouts.length ? `<h3 class="section-title">En plus</h3><ul class="card list">${trier(L.ajouts).map(ligneAjout).join('')}</ul>` : ''}`;
     };
 
-    const vide = !l.lieux.producteur.rayons.length && !l.lieux.drive.rayons.length && !l.lieux.orchestra.rayons.length && !l.fourche.length;
-    if (vide && !l.lieux.drive.ajouts.length && !l.lieux.producteur.ajouts.length) return `
-      ${App.commun.weekNav(state.semaineActive)}
+    const vide = App.shopping.LIEUX.every(x => !l.lieux[x].rayons.length && !l.lieux[x].ajouts.length && !l.lieux[x].maison.length) && !l.fourche.length;
+    const aVerifier = (state.essentiels || []).filter(e => !(sem.courses.maison || {})[e.id]).length;
+    const onglets = `
+      <div class="who segment courses-onglets">
+        <button class="seg ${V.onglet === 'repas' ? 'on' : ''}" data-action="onglet" data-v="repas">🥕 Repas</button>
+        <button class="seg ${V.onglet === 'maison' ? 'on' : ''}" data-action="onglet" data-v="maison">🧻 Maison${aVerifier ? ` <span class="d-badge">${aVerifier}</span>` : ''}</button>
+      </div>`;
+    if (V.onglet === 'maison') return `${App.commun.weekNav(state.semaineActive)}${onglets}${V.vueMaison(state, sem)}`;
+    if (vide) return `
+      ${App.commun.weekNav(state.semaineActive)}${onglets}
       ${App.ui.vide('🛒', 'La liste se fait toute seule', 'Préparez le menu de la semaine : les ingrédients arrivent ici, rangés par lieu et par rayon, sans ce que vous avez déjà.',
         '<button class="btn btn-primary" data-action="go-menu">Préparer le menu</button>')}
       ${V.blocAjout()}`;
 
     return `
-      ${App.commun.weekNav(state.semaineActive)}
+      ${App.commun.weekNav(state.semaineActive)}${onglets}
+      ${aVerifier ? `<button class="banner" data-action="onglet" data-v="maison">🧻 ${aVerifier} essentiel${aVerifier > 1 ? 's' : ''} de la maison à vérifier (eau, papier toilette…) ›</button>` : ''}
       <section class="card courses-resume">
         <div class="row-between">
           <div><span class="gros">${euro(l.total)}</span><small class="muted"> de courses</small></div>
@@ -102,6 +121,7 @@ App.views.courses = {
       </section>
 
       ${blocLieu('producteur', '🧺 Producteur', 'Fruits et légumes, chez le producteur à côté')}
+      ${blocLieu('boucherie', '🥩 Boucherie halal', 'Viande et volaille halal, chez le boucher')}
       ${blocLieu('drive', '🚗 Drive', App.u.esc(state.settings.drive))}
       ${blocLieu('orchestra', '🍼 Orchestra', 'Purées et compotes de bébé achetées')}
 
@@ -120,6 +140,52 @@ App.views.courses = {
       ${sem.coursesFaitesLe ? '' : `<div class="sticky-bottom"><button class="btn btn-primary block-btn" data-action="faites">Courses faites ✓ <small>ranger au garde-manger</small></button></div>`}`;
   },
 
+  /** Onglet « Maison » : les essentiels à vérifier une fois par semaine. */
+  vueMaison(state, sem) {
+    const { esc, euro } = App.u;
+    const m = sem.courses.maison || {};
+    const liste = state.essentiels || [];
+    const faits = liste.filter(e => m[e.id]).length;
+    const ess = App.shopping.essentiels(sem, state);
+    const litres = state.settings.eauLitresParJour || 0;
+    return `
+      <section class="card courses-resume">
+        <div class="row-between">
+          <div><span class="gros">${faits}/${liste.length}</span><small class="muted"> vérifiés</small></div>
+          <div class="muted">${ess.length} à acheter · <strong class="txt">${euro(ess.reduce((s, e) => s + e.cout, 0))}</strong></div>
+        </div>
+        <div class="bar"><span style="width:${liste.length ? (faits / liste.length * 100).toFixed(1) : 0}%"></span></div>
+        <small class="muted">Une fois par semaine : « On en a » ou « À acheter ». Ce qui est à acheter s’ajoute à la liste du drive et au budget.</small>
+        ${faits < liste.length ? '<button class="btn block" data-action="maison-tout">✓ Tout le reste, on en a</button>' : ''}
+      </section>
+      <ul class="card list essentiels">${liste.map(e => {
+        const v = m[e.id];
+        const eau = e.auto === 'eau' ? Math.max(1, Math.ceil(litres * 7 / 9 - 1e-9)) : 0;
+        return `
+        <li class="item essentiel ${v ? 'fait' : ''}">
+          <span class="ess-emoji">${e.emoji}</span>
+          <span class="grow"><strong>${esc(e.nom)}</strong>
+            ${eau ? `<small class="muted block">${litres} L par jour → ${litres * 7} L par semaine = ${eau} pack${eau > 1 ? 's' : ''}</small>` : ''}
+            <small class="muted">${euro((eau || 1) * (e.prix || 0))}</small></span>
+          <div class="ess-choix">
+            <button class="mini ${v === 'ok' ? 'on' : ''}" data-action="maison" data-id="${e.id}" data-v="ok">On en a</button>
+            <button class="mini ${v === 'acheter' ? 'on acheter' : ''}" data-action="maison" data-id="${e.id}" data-v="acheter">À acheter</button>
+          </div>
+          <button class="icon-btn small" data-action="ess-suppr" data-id="${e.id}" aria-label="Retirer de la liste">✕</button>
+        </li>`;
+      }).join('')}</ul>
+      <h3 class="section-title">Ajouter un essentiel</h3>
+      <section class="card">
+        <form class="add-form" data-action="ess-ajout">
+          <input name="nom" placeholder="Piles, ampoules, croquettes…" autocomplete="off"/>
+          <input name="prix" inputmode="decimal" placeholder="€" class="prix"/>
+          <select name="lieu" class="lieu-select"><option value="drive">Drive</option><option value="producteur">Producteur</option><option value="boucherie">Boucherie</option><option value="orchestra">Orchestra</option></select>
+          <button class="btn btn-primary" type="submit" aria-label="Ajouter">＋</button>
+        </form>
+        <small class="muted">L’eau se règle dans Réglages (litres bus par jour).</small>
+      </section>`;
+  },
+
   blocAjout() {
     const { esc } = App.u;
     return `
@@ -128,7 +194,7 @@ App.views.courses = {
         <form class="add-form" data-action="ajout">
           <input name="nom" placeholder="Article…" autocomplete="off"/>
           <input name="prix" inputmode="decimal" placeholder="€" class="prix"/>
-          <select name="lieu" class="lieu-select"><option value="drive">Drive</option><option value="producteur">Producteur</option><option value="orchestra">Orchestra</option></select>
+          <select name="lieu" class="lieu-select"><option value="drive">Drive</option><option value="producteur">Producteur</option><option value="boucherie">Boucherie</option><option value="orchestra">Orchestra</option></select>
           <button class="btn btn-primary" type="submit" aria-label="Ajouter">＋</button>
         </form>
         <div class="chips">
@@ -144,6 +210,7 @@ App.views.courses = {
     App.store.update(() => {
       const c = App.store.semaine().courses;
       if (kind === 'coche') { if (c.coches[id]) delete c.coches[id]; else c.coches[id] = true; }
+      else if (kind === 'ess') { const k = 'ess-' + id; if (c.coches[k]) delete c.coches[k]; else c.coches[k] = true; }
       else { const a = c.ajouts.find(x => x.id === id); if (a) a.coche = !a.coche; }
     });
   },
@@ -169,7 +236,7 @@ App.views.courses = {
     }
     el.onchange = e => {
       const t = e.target;
-      if (t.dataset.kind === 'coche' || t.dataset.kind === 'ajout') V.basculer(t.dataset.kind, t.dataset.id);
+      if (['coche', 'ajout', 'ess'].includes(t.dataset.kind)) V.basculer(t.dataset.kind, t.dataset.id);
     };
     // Glisser une ligne vers la droite pour la cocher (écouteurs posés une seule fois)
     if (!V.glisser) {
@@ -201,6 +268,10 @@ App.views.courses = {
     el.onsubmit = e => {
       e.preventDefault();
       const f = e.target, nom = f.nom.value.trim();
+      if (f.dataset.action === 'ess-ajout') {
+        if (!nom) return;
+        return App.store.update(st => st.essentiels.push({ id: 'ess' + App.u.uid(), nom, emoji: '🛒', prix: App.u.num(f.prix.value) || 0, lieu: f.lieu.value }));
+      }
       if (!nom) return;
       App.store.update(() => sem().courses.ajouts.push(
         { id: App.u.uid(), nom, prix: App.u.num(f.prix.value) || 0, lieu: f.lieu.value, coche: false }));
@@ -210,7 +281,23 @@ App.views.courses = {
       if (!a) return;
       const act = a.dataset.action;
       if (App.commun.handle(act)) return;
-      if (act === 'go-menu') App.router.go('menu');
+      if (act === 'onglet') { V.onglet = a.dataset.v; App.router.render(false); }
+      else if (act === 'maison') App.store.update(() => {
+        const m = sem().courses.maison = sem().courses.maison || {};
+        m[a.dataset.id] = m[a.dataset.id] === a.dataset.v ? undefined : a.dataset.v;
+        if (!m[a.dataset.id]) delete m[a.dataset.id];
+        App.ui.haptique();
+      });
+      else if (act === 'maison-tout') App.store.update(st => {
+        const m = sem().courses.maison = sem().courses.maison || {};
+        st.essentiels.forEach(e => { if (!m[e.id]) m[e.id] = 'ok'; });
+      });
+      else if (act === 'ess-suppr') {
+        const e = App.store.state.essentiels.find(x => x.id === a.dataset.id);
+        App.ui.confirmSheet(`Retirer « ${e.nom} » de la liste des essentiels ?`, 'Retirer', () =>
+          App.store.update(st => { st.essentiels = st.essentiels.filter(x => x.id !== a.dataset.id); }));
+      }
+      else if (act === 'go-menu') App.router.go('menu');
       else if (act === 'go-fourche') App.router.go('fourche');
       else if (act === 'magasin') { V.magasin = !V.magasin; V.verrouiller(V.magasin); App.ui.haptique(); App.router.render(false); }
       else if (act === 'stock') App.store.update(() => { sem().courses.stock[a.dataset.id] = a.dataset.val === '1'; });
@@ -252,6 +339,7 @@ App.views.courses = {
       <div class="list-select">
         <button class="option" data-action="lieu" data-lieu="drive">🚗 <span class="grow">Liste drive (${App.u.esc(st.settings.drive)})</span></button>
         <button class="option" data-action="lieu" data-lieu="producteur">🧺 <span class="grow">Liste producteur</span></button>
+        <button class="option" data-action="lieu" data-lieu="boucherie">🥩 <span class="grow">Liste boucherie halal</span></button>
         <button class="option" data-action="lieu" data-lieu="orchestra">🍼 <span class="grow">Liste Orchestra (bébé)</span></button>
       </div>
       <p class="muted small">Remplir automatiquement le panier drive viendra à l’étape suivante.</p>`, async (action, target) => {

@@ -41,6 +41,7 @@ App.views.menu = {
               <span class="slot-body"><small class="slot-moment">${m.nom}</small>
                 ${s ? App.views.menu.slotTexte(s) : '<span class="muted">Choisir un repas</span>'}
                 ${s && s.envieId ? '<small class="pill envie-pill">💡 envie</small>' : ''}
+                ${s && s.consigneId ? '<small class="pill envie-pill">📝 consigne</small>' : ''}
                 ${r && s.type === 'maison' && App.suggest.conseille(r, obj) ? `<small class="pill good">${obj.emoji}</small>` : ''}
               </span>
             </button>`;

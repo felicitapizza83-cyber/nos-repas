@@ -49,9 +49,10 @@ App.views.budget = {
 
       <h3 class="section-title">Par lieu d’achat</h3>
       <section class="card liste-budget">
-        ${lieu(b.lieux[0], '🧺 Producteur')}
-        ${lieu(b.lieux[1], '🚗 Drive')}
-        ${b.lieux[2].montant || b.lieux[2].reel ? lieu(b.lieux[2], '🍼 Orchestra') : ''}
+        ${b.lieux.map(x => {
+          const L = window.APP_DATA.lieux.find(y => y.id === x.id) || { emoji: '', nom: x.id };
+          return x.id === 'producteur' || x.id === 'drive' || x.montant || x.reel ? lieu(x, `${L.emoji} ${L.nom}`) : '';
+        }).join('')}
       </section>
 
       ${state.settings.fourcheDansBudget ? `

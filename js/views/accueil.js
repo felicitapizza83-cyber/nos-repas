@@ -14,8 +14,29 @@ App.views.accueil = {
     return new Date().getHours() < 14 && state.settings.midis ? 'midi' : 'soir';
   },
 
+  /** Avant le début du suivi : le compte à rebours du démarrage. */
+  carteDemarrage(state) {
+    const d = App.u.parseKey(App.store.debut());
+    const jours = Math.round((d - new Date(new Date().setHours(12, 0, 0, 0))) / 864e5);
+    const sem = App.store.semaine(App.store.debut());
+    const lundi = sem.slots['lun-midi'] || sem.slots['lun-soir'];
+    return `
+      <section class="card jour demarrage">
+        <div class="jour-corps">
+          <span class="jour-badge plat">🚀 Démarrage ${jours <= 1 ? 'demain' : `dans ${jours} jours`}</span>
+          <h2>Le plan commence ${d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}</h2>
+          <p class="muted small">${lundi ? 'Le menu de la première semaine est prêt : faites les courses, et c’est parti.' : 'Préparez le menu de la première semaine, puis faites les courses.'}</p>
+          <div class="jour-actions">
+            <button class="btn btn-primary" data-action="go" data-route="${lundi ? 'courses' : 'menu'}">${lundi ? '🛒 Faire les courses' : '📅 Préparer le menu'}</button>
+            <button class="btn" data-action="go" data-route="${lundi ? 'menu' : 'courses'}">${lundi ? 'Le menu' : 'Courses'}</button>
+          </div>
+        </div>
+      </section>`;
+  },
+
   carteAujourdhui(state) {
     const { esc, euro } = App.u;
+    if (App.u.mondayOf() < App.store.debut()) return App.views.accueil.carteDemarrage(state);
     const k = App.u.mondayOf();
     const sem = App.store.semaine(k);
     const j = App.JOURS[App.u.todayIndex()];
@@ -97,6 +118,7 @@ App.views.accueil = {
     const date = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
 
     const envies = sem.envies.map(e => {
+      if (e.consigne) return App.views.accueil.ligneConsigne(sem, e);
       const { resultats } = App.suggest.analyserEnvie(e.texte, state);
       const auMenu = App.suggest.envieAuMenu(sem, e);
       const slot = e.slotId ? sem.slots[e.slotId] : null;
@@ -130,7 +152,15 @@ App.views.accueil = {
         </li>`;
     }).join('');
 
-    const rappels = [App.views.accueil.carteStock(state), App.views.accueil.carteSuivi(state), App.views.accueil.carteFourche(state)].filter(Boolean);
+    const ess = state.essentiels || [];
+    const essAVerifier = ess.filter(e => !((sem.courses.maison || {})[e.id])).length;
+    const carteMaison = essAVerifier && !sem.coursesFaitesLe ? `
+      <section class="card link-card due" data-action="courses-maison">
+        <div class="grow"><small class="muted">Avant les courses</small>
+          <h3>🧻 Vérifier les essentiels de la maison</h3>
+          <small class="muted">${essAVerifier} à vérifier : eau, papier toilette, sacs poubelle…</small></div><span class="chev">›</span>
+      </section>` : '';
+    const rappels = [carteMaison, App.views.accueil.carteStock(state), App.views.accueil.carteSuivi(state), App.views.accueil.carteFourche(state)].filter(Boolean);
 
     return `
       <div class="accueil-tete">
@@ -143,10 +173,10 @@ App.views.accueil = {
       <section class="card envies-carte">
         <button class="question" data-action="question">${esc(state.settings.question)}</button>
         <form class="envie-form" data-action="envie-add">
-          <input name="texte" placeholder="Un bon poisson, réconfortant, chocolat…" autocomplete="off" enterkeyhint="done"/>
+          <input name="texte" placeholder="Un bon poisson, végé tous les soirs, j’ai mes règles…" autocomplete="off" enterkeyhint="done"/>
           <button class="btn btn-primary" type="submit" aria-label="Ajouter l’envie">＋</button>
         </form>
-        ${envies ? `<ul class="plain envies">${envies}</ul>` : '<small class="muted">Le plat qui correspond se place tout seul dans le menu.</small>'}
+        ${envies ? `<ul class="plain envies">${envies}</ul>` : '<small class="muted">Une envie (« un bon poisson ») ou une consigne (« végétarien tous les soirs », « j’ai mes règles douloureuses », « pas de champignons », « rapide ce week-end ») : le menu s’adapte tout seul.</small>'}
       </section>
 
       <h3 class="section-title">${courante ? 'Cette semaine' : `Semaine ${esc(App.u.weekLabel(state.semaineActive))}`}</h3>
@@ -173,6 +203,7 @@ App.views.accueil = {
       const act = a.dataset.action;
       if (act === 'go') App.router.go(a.dataset.route);
       else if (act === 'fiche') App.views.repas.detail(a.dataset.id);
+      else if (act === 'courses-maison') { App.views.courses.onglet = 'maison'; App.router.go('courses'); }
       else if (act === 'cuisiner') App.cuisine.ouvrir(a.dataset.id);
       else if (act === 'changer') {
         // Le repas du jour est toujours dans la semaine en cours
@@ -206,14 +237,18 @@ App.views.accueil = {
       e.preventDefault();
       const texte = e.target.texte.value.trim();
       if (!texte) return;
-      let res = null;
+      let res = null, bilan = null;
+      const consigne = App.consignes.analyser(texte, App.store.state);
       App.store.update(st => {
         const sem = App.store.semaine();
         const e = { id: App.u.uid(), texte, date: Date.now() };
         sem.envies.push(e);
-        res = App.suggest.placerEnvie(st, sem, e);
+        if (consigne) { e.consigne = consigne; App.consignes.casesFixes(st, e); bilan = App.consignes.appliquer(st, sem, e); }
+        else res = App.suggest.placerEnvie(st, sem, e);
       });
-      App.views.accueil.annoncer(res);
+      App.ui.haptique();
+      if (consigne) App.views.accueil.annoncerConsigne(consigne, bilan);
+      else App.views.accueil.annoncer(res);
     };
   },
 
@@ -223,6 +258,28 @@ App.views.accueil = {
     const e = sem.envies.find(x => x.id === id);
     if (!e) return;
     const { esc } = App.u;
+    if (e.consigne) return App.ui.sheet(`
+      <h2>📝 ${esc(e.texte)}</h2>
+      <div class="list-select">
+        <button class="option" data-action="reappliquer">🔄 <span class="grow">Réappliquer au menu<small class="muted block">Après avoir complété ou changé le menu</small></span></button>
+        <button class="option" data-action="suppr">↩︎ <span class="grow">Annuler la consigne<small class="muted block">Les repas qu’elle avait changés reviennent</small></span></button>
+      </div>`, action => {
+      if (action === 'reappliquer') {
+        let bilan = null;
+        App.store.update(st => { const w = App.store.semaine(); const x = w.envies.find(y => y.id === id); bilan = App.consignes.appliquer(st, w, x); });
+        App.ui.closeSheet();
+        App.views.accueil.annoncerConsigne(e.consigne, bilan);
+      }
+      if (action === 'suppr') {
+        App.store.update(st => {
+          const w = App.store.semaine(); const x = w.envies.find(y => y.id === id);
+          if (x) App.suggest.retirerEnvie(st, w, x);
+          w.envies = w.envies.filter(y => y.id !== id);
+        });
+        App.ui.closeSheet();
+        App.ui.toast('Consigne annulée : le menu est revenu comme avant');
+      }
+    });
     App.ui.sheet(`
       <h2>💭 ${esc(e.texte)}</h2>
       <div class="list-select">
@@ -241,6 +298,45 @@ App.views.accueil = {
         App.ui.closeSheet();
       }
     });
+  },
+
+  /** Une consigne dans la liste des envies : ce qu'elle a compris, ce qu'elle a changé, le conseil. */
+  ligneConsigne(sem, e) {
+    const { esc } = App.u;
+    const c = e.consigne;
+    const changes = (c.changes || []).filter(id => sem.slots[id] && sem.slots[id].consigneId === e.id);
+    const conseils = App.consignes.conseils(c);
+    return `
+      <li class="envie consigne">
+        <div class="envie-head">
+          <strong class="grow">📝 ${esc(e.texte)}</strong>
+          <button class="icon-btn small" data-action="envie-plus" data-id="${e.id}" aria-label="Plus d’options">⋯</button>
+        </div>
+        <div class="chips">
+          ${App.consignes.libelles(c).map(l => `<span class="chip chip-good">${esc(l)}</span>`).join('')}
+          <span class="chip">🗓 ${esc(c.porteeTexte)}</span>
+        </div>
+        ${changes.length ? `<div class="consigne-repas">
+            <small class="muted">${changes.length} repas adapté${changes.length > 1 ? 's' : ''} :</small>
+            ${changes.slice(0, 4).map(id => {
+              const r = App.store.repas(sem.slots[id].repasId);
+              return r ? `<button class="consigne-plat" data-action="envie-repas" data-id="${r.id}">
+                <img class="thumb sm" src="${window.APP_DATA.imageRepas(r)}" alt=""/>
+                <span><small class="muted">${esc(App.commun.slotLabel(id))}</small>${esc(r.nom)}</span></button>` : '';
+            }).join('')}
+            ${changes.length > 4 ? `<button class="link-btn" data-action="go" data-route="menu">+ ${changes.length - 4} autres dans le menu ›</button>` : ''}
+          </div>` : '<small class="muted block">Le menu respectait déjà cette consigne 👍</small>'}
+        ${(c.gardes || []).length ? `<small class="muted block">⚠️ Gardé car choisi à la main : ${c.gardes.map(id => esc(App.commun.slotLabel(id).toLowerCase())).join(', ')}</small>` : ''}
+        ${conseils.length ? `<p class="note consigne-conseil">💡 ${conseils.map(esc).join('<br>💡 ')}</p>` : ''}
+      </li>`;
+  },
+
+  annoncerConsigne(c, bilan) {
+    const l = App.consignes.libelles(c).join(', ').toLowerCase();
+    const n = bilan ? bilan.changes.length : 0;
+    App.ui.toast(n ? `📝 Compris : ${l} (${c.porteeTexte}) · ${n} repas adapté${n > 1 ? 's' : ''}`
+      : bilan && !bilan.cases ? `📝 Noté : ${l} · plus de repas à venir cette semaine`
+      : `📝 Noté : ${l} · le menu la respectait déjà`);
   },
 
   annoncer(res) {
