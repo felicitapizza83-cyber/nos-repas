@@ -72,7 +72,7 @@ App.views.courses = {
       const L = l.lieux[id];
       const placard = id === 'drive' ? l.placard : [];
       if (!L.rayons.length && !L.ajouts.length && !placard.length && !L.maison.length) return '';
-      return `
+      return `<section class="bloc-lieu">
         <div class="lieu-head"><h2>${titre}</h2><strong>${euro(L.total)}</strong></div>
         ${sousTitre && !V.magasin ? `<small class="muted lieu-sub">${sousTitre}</small>` : ''}
         ${L.rayons.map(r => `
@@ -81,7 +81,8 @@ App.views.courses = {
         ${placard.length && !V.magasin ? `<h3 class="section-title">À vérifier dans les placards</h3>
           <ul class="card list">${placard.map(ligne).join('')}</ul>` : ''}
         ${L.maison.length ? `<h3 class="section-title">🧻 Maison</h3><ul class="card list">${trier(L.maison).map(ligneEss).join('')}</ul>` : ''}
-        ${L.ajouts.length ? `<h3 class="section-title">En plus</h3><ul class="card list">${trier(L.ajouts).map(ligneAjout).join('')}</ul>` : ''}`;
+        ${L.ajouts.length ? `<h3 class="section-title">En plus</h3><ul class="card list">${trier(L.ajouts).map(ligneAjout).join('')}</ul>` : ''}
+      </section>`;
     };
 
     const vide = App.shopping.LIEUX.every(x => !l.lieux[x].rayons.length && !l.lieux[x].ajouts.length && !l.lieux[x].maison.length) && !l.fourche.length;
@@ -120,12 +121,13 @@ App.views.courses = {
           : l.nbDeduits ? `<small class="muted">${l.nbDeduits} produit${l.nbDeduits > 1 ? 's' : ''} déjà à la maison, déduit${l.nbDeduits > 1 ? 's' : ''} de la liste.</small>` : ''}
       </section>
 
+      <div class="lieux-grille">
       ${blocLieu('producteur', '🧺 Producteur', 'Fruits et légumes, chez le producteur à côté')}
       ${blocLieu('boucherie', '🥩 Boucherie halal', 'Viande et volaille halal, chez le boucher')}
       ${blocLieu('drive', '🚗 Drive', App.u.esc(state.settings.drive))}
       ${blocLieu('orchestra', '🍼 Orchestra', 'Purées et compotes de bébé achetées')}
 
-      ${l.fourche.length && !V.magasin ? `
+      ${l.fourche.length && !V.magasin ? `<section class="bloc-lieu">
         <div class="lieu-head"><h2>🌾 La Fourche</h2><button class="link-btn" data-action="go-fourche">Commande de ${App.u.moisLabel(m).split(' ')[0]} ›</button></div>
         <small class="muted lieu-sub">Déjà prévu dans la commande bio mensuelle. S’il en manque, basculez l’article sur le drive.</small>
         <ul class="card list">${l.fourche.map(i => `
@@ -133,7 +135,8 @@ App.views.courses = {
             <div class="grow"><strong>${esc(i.nom)}</strong> <span class="muted">${qte(i.qty, i.unite)}</span>
               <small class="muted for">${i.repas.map(esc).join(', ')}</small></div>
             <button class="mini" data-action="au-drive" data-id="${i.id}">Manque → drive</button>
-          </li>`).join('')}</ul>` : ''}
+          </li>`).join('')}</ul></section>` : ''}
+      </div>
 
       ${V.magasin ? '' : V.blocAjout()}
 

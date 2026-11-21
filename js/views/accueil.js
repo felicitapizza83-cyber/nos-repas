@@ -168,6 +168,8 @@ App.views.accueil = {
         <button class="chip chip-btn ${obj ? 'chip-good' : ''}" data-action="go" data-route="objectif">${obj ? `${obj.emoji} ${esc(obj.nom)}` : '🌱 Choisir un objectif'}</button>
       </div>
 
+      <div class="colonnes">
+      <div class="col">
       ${App.views.accueil.carteAujourdhui(state)}
 
       <section class="card envies-carte">
@@ -178,6 +180,8 @@ App.views.accueil = {
         </form>
         ${envies ? `<ul class="plain envies">${envies}</ul>` : '<small class="muted">Une envie (« un bon poisson ») ou une consigne (« végétarien tous les soirs », « j’ai mes règles douloureuses », « pas de champignons », « rapide ce week-end ») : le menu s’adapte tout seul.</small>'}
       </section>
+      </div>
+      <div class="col">
 
       <h3 class="section-title">${courante ? 'Cette semaine' : `Semaine ${esc(App.u.weekLabel(state.semaineActive))}`}</h3>
       <div class="tuiles">
@@ -193,7 +197,9 @@ App.views.accueil = {
       </div>
       <small class="muted tuiles-aide">${b.depasse ? `${euro(-b.reste)} au-dessus des ${euro(b.plafond)} — touchez Budget pour alléger` : `Il reste ${euro(b.reste)} sur ${euro(b.plafond)}`}</small>
 
-      ${rappels.length ? `<h3 class="section-title">À faire</h3>${rappels.join('')}` : ''}`;
+      ${rappels.length ? `<h3 class="section-title">À faire</h3>${rappels.join('')}` : ''}
+      </div>
+      </div>`;
   },
 
   mount(el, state) {

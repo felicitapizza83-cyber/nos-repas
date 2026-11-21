@@ -64,7 +64,7 @@ App.views.menu = {
         <button class="rond ${obj ? 'primary-soft' : ''}" data-action="go-objectif" aria-label="Objectif de la semaine" title="${obj ? esc(obj.nom) : 'Choisir un objectif'}">${obj ? obj.emoji : '🌱'}</button>
         <button class="rond" data-action="options" aria-label="Plus d’options">⋯</button>
       </div>
-      ${jours}
+      <div class="jours-grille">${jours}</div>
       ${App.views.menu.carteDouceurs(sem)}
       <a class="ligne-lien discret" href="#/reglages"><span class="grow">⚙️ Midis, bébé, gâteaux : réglages du menu</span><span class="chev">›</span></a>`;
   },
