@@ -46,6 +46,40 @@ App.budget = {
     return res;
   },
 
+  /** Un mois (« AAAA-MM ») : par lieu d'achat, par catégorie, semaine par semaine.
+      Une semaine appartient au mois de son jeudi ; La Fourche compte pour sa commande entière du mois. */
+  mois(state, m) {
+    const parLieu = {};
+    App.shopping.LIEUX.forEach(l => { parLieu[l] = 0; });
+    const cat = { repas: 0, desserts: 0, maison: 0, bebe: 0 };
+    let ext = 0, estime = false;
+    const semaines = App.u.semainesDuMois(m).filter(k => App.store.compte(k)).map(k => {
+      const w = state.semaines[k];
+      if (!App.budget.active(w)) return { k, total: 0, vide: true };
+      const r = App.budget.resume(w, state, k);
+      r.lieux.forEach(x => { parLieu[x.id] += x.montant; if (!x.reel && x.montant) estime = true; });
+      ext += r.extTotal;
+      const ess = App.shopping.essentiels(w, state);
+      const des = ess.filter(e => e.groupe === 'desserts').reduce((s, e) => s + e.cout, 0);
+      const mai = ess.filter(e => e.groupe === 'maison').reduce((s, e) => s + e.cout, 0);
+      const bebe = (r.lieux.find(x => x.id === 'orchestra') || {}).montant || 0;
+      cat.desserts += des; cat.maison += mai; cat.bebe += bebe;
+      cat.repas += Math.max(0, r.courses - bebe - des - mai);
+      return { k, total: r.courses + r.extTotal, courses: r.courses, ext: r.extTotal };
+    });
+    const F = App.shopping.fourcheMois(m, state);
+    const fActive = F.montant != null || F.prevues.length > 0;
+    const fourche = fActive ? F.cout : 0;
+    if (fActive && F.montant == null) estime = true;
+    const courses = Object.values(parLieu).reduce((s, x) => s + x, 0);
+    const total = courses + ext + fourche;
+    const nbSemaines = semaines.length;
+    return {
+      m, parLieu, cat, ext, fourche, fourcheMois: F, courses, total, estime, semaines, nbSemaines,
+      plafond: state.settings.plafond * nbSemaines, actif: semaines.some(s => !s.vide) || fourche > 0
+    };
+  },
+
   /** Coût de l'alimentation mois par mois sur une année : courses, repas dehors, La Fourche. */
   annee(state, annee) {
     const mois = [];

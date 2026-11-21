@@ -9,6 +9,12 @@ App.shopping = {
   /** Lieux où l'on fait les courses chaque semaine (La Fourche est mensuelle). */
   LIEUX: ['producteur', 'boucherie', 'drive', 'orchestra'],
   NOMS_LIEUX: { producteur: 'Producteur', boucherie: 'Boucherie halal', orchestra: 'Orchestra (bébé)' },
+  /** Listes à vérifier chaque semaine dans les courses. */
+  GROUPES: {
+    desserts: { emoji: '🍎', nom: 'Desserts & fruits', aide: 'fruits, yaourts, compotes, glaces…' },
+    maison: { emoji: '🧻', nom: 'Maison', aide: 'eau, papier toilette, sacs poubelle…' }
+  },
+  groupe(e) { return e.groupe || 'maison'; },
 
   /** Consommation d'un essentiel pour la semaine (l'eau suit les litres bus par jour). */
   besoinEssentiel(e, state) {
@@ -32,7 +38,7 @@ App.shopping = {
     const m = (semaine.courses && semaine.courses.maison) || {};
     return (state.essentiels || []).map(e => {
       const c = App.shopping.calculEssentiel(e, m[e.id], state);
-      return { id: 'ess-' + e.id, ess: e.id, nom: e.nom, emoji: e.emoji, lieu: e.lieu || 'drive', packs: c.packs,
+      return { id: 'ess-' + e.id, ess: e.id, groupe: App.shopping.groupe(e), nom: e.nom, emoji: e.emoji, lieu: e.lieu || 'drive', packs: c.packs,
         pack: e.pack || 1, unite: e.unite, cout: c.cout, coche: !!semaine.courses.coches['ess-' + e.id] };
     }).filter(x => x.packs > 0);
   },
@@ -181,7 +187,10 @@ App.shopping = {
       const pl = l.placard.filter(i => !i.enStock);
       if (pl.length) { lignes.push('', 'PLACARD'); pl.forEach(i => lignes.push(`▫️ ${i.nom}`)); }
     }
-    if (L.maison.length) { lignes.push('', 'MAISON'); L.maison.forEach(e => lignes.push(`${e.coche ? '✅' : '▫️'} ${e.nom}${e.pack > 1 ? ` (pack de ${e.pack})` : ''} × ${e.packs}`)); }
+    Object.entries(App.shopping.GROUPES).forEach(([g, G]) => {
+      const its = L.maison.filter(e => e.groupe === g);
+      if (its.length) { lignes.push('', G.nom.toUpperCase()); its.forEach(e => lignes.push(`${e.coche ? '✅' : '▫️'} ${e.nom}${e.pack > 1 ? ` (pack de ${e.pack})` : ''} × ${e.packs}`)); }
+    });
     if (L.ajouts.length) { lignes.push('', 'EN PLUS'); L.ajouts.forEach(a => lignes.push(`${a.coche ? '✅' : '▫️'} ${a.nom}`)); }
     lignes.push('', `Estimation : ${App.u.euro(L.total)}`);
     return lignes.join('\n');
@@ -198,7 +207,8 @@ App.shopping = {
   /** Commande mensuelle La Fourche : besoins des menus du mois, extrapolés au mois complet. */
   fourcheMois(m, state) {
     const f = state.fourche[m] || { passee: false, montant: null, stock: {}, ajouts: [], coches: {} };
-    const semaines = App.u.semainesDuMois(m);
+    // Seulement les semaines suivies (le mois du démarrage peut n'en compter qu'une)
+    const semaines = App.u.semainesDuMois(m).filter(k => App.store.compte(k));
     const prevues = semaines.filter(k => {
       const w = state.semaines[k];
       if (!App.store.compte(k)) return false;
