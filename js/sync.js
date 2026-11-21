@@ -18,7 +18,7 @@ App.sync = {
     messagingSenderId: '888273839387',
     appId: '1:888273839387:web:3f3e572ce47efba034dfbe'
   },
-  SDK: 'https://www.gstatic.com/firebasejs/10.14.1/',
+  SDK: 'https://www.gstatic.com/firebasejs/12.6.0/',
   K_BASE: 'nos-repas-sync-base',   // état tel qu'il était à la dernière synchro (pour calculer les différences)
   K_EMAIL: 'nos-repas-sync-email', // adresse en attente du lien
   K_DERNIERE: 'nos-repas-sync-date',
@@ -48,6 +48,7 @@ App.sync = {
     }
     const F = App.sync.fb;
     const app = F.initializeApp(App.sync.CONFIG);
+    App.sync.app = app;
     App.sync.auth = F.getAuth(app);
     App.sync.db = F.getFirestore(app);
     try { App.sync.base = JSON.parse(localStorage.getItem(App.sync.K_BASE)); } catch (e) { App.sync.base = null; }

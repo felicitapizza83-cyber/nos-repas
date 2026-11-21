@@ -164,6 +164,7 @@ App.drawer = {
         <li><b>📅 Menu</b> Bandeau des jours, moins de boutons ; les réglages bébé passent dans Réglages.</li>
         <li><b>📖 Recettes</b> Grandes photos, recherche plus large, un seul bouton « + ».</li>
         <li><b>⚙️ Réglages</b> Tout au même endroit : famille, bébé, budget, sauvegarde.</li>
+        <li><b>✨ Intelligence artificielle</b> Une photo devient une recette, l’accueil comprend vos phrases, des idées avec ce qu’il reste.</li>
         <li><b>🔄 Synchronisation</b> Vos deux iPhone partagent menus, courses, envies, recettes et budget, en direct.</li>
       </ul>
       <button class="btn btn-primary block" data-action="ok">Super</button>`, a => { if (a === 'ok') App.ui.closeSheet(); });

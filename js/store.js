@@ -15,7 +15,8 @@
       fourcheDansBudget: true, // la commande La Fourche est répartie dans le budget de la semaine
       calories: true,          // afficher les calories estimées par portion
       bebe: { actif: true, naissance: null, orchestraParSemaine: 3 },
-      eauLitresParJour: 4,     // eau bue par jour pour le foyer (2 L chacun)
+      eauLitresParJour: 4,
+      ia: true,                // IA Gemini (photo → recette, phrases libres, idées)     // eau bue par jour pour le foyer (2 L chacun)
       debut: null,             // lundi du début du suivi : les semaines d'avant sont ignorées
       noms: ['Elle', 'Lui'],
       moi: 0,                 // qui utilise ce téléphone
