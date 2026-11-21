@@ -94,6 +94,32 @@ App.sync = {
     }
   },
 
+  // ---------- Connexion par mot de passe (aucun e-mail à chaque connexion) ----------
+  async connexionMotDePasse(email, mdp) {
+    try {
+      await App.sync.fb.signInWithEmailAndPassword(App.sync.auth, email, mdp);
+      App.ui.toast('Connecté ✓ Synchronisation en cours…');
+      return true;
+    } catch (e) {
+      App.ui.toast(['auth/invalid-credential', 'auth/wrong-password', 'auth/user-not-found', 'auth/invalid-login-credentials'].includes(e.code)
+        ? 'Mot de passe incorrect, ou pas encore créé : touchez « Créer ou changer mon mot de passe »'
+        : e.code === 'auth/too-many-requests' ? 'Trop d’essais : patientez quelques minutes' : 'Connexion impossible : ' + (e.code || e.message));
+      return false;
+    }
+  },
+
+  /** E-mail pour choisir (ou changer) son mot de passe : une seule fois, ensuite plus besoin d'e-mail. */
+  async emailMotDePasse(email) {
+    try {
+      await App.sync.fb.sendPasswordResetEmail(App.sync.auth, email, { url: location.origin + location.pathname });
+      App.ui.toast('📬 E-mail envoyé : choisissez votre mot de passe, puis revenez ici');
+      return true;
+    } catch (e) {
+      App.ui.toast(e.code === 'auth/quota-exceeded' ? 'Limite d’e-mails atteinte pour aujourd’hui : réessayez demain' : 'Envoi impossible : ' + (e.code || e.message));
+      return false;
+    }
+  },
+
   async deconnecter() {
     App.sync.arreter();
     await App.sync.fb.signOut(App.sync.auth);
@@ -375,9 +401,11 @@ App.sync = {
       </div>
       <p class="muted small">Menus, courses, envies, recettes, garde-manger, budget et suivi sont partagés entre vos deux iPhone, en direct. La couleur et le mode clair/sombre restent propres à chaque téléphone.</p>
       <button class="btn block" data-action="relancer">Synchroniser maintenant</button>
+      <button class="btn block" data-action="mdp-moi">🔑 Créer ou changer mon mot de passe</button>
+      <small class="muted">Avec un mot de passe, plus besoin d’e-mail pour se reconnecter (nouveau téléphone, app réinstallée…).</small>
       <button class="btn btn-ghost-danger block" data-action="deconnecter">Se déconnecter</button>` : `
       <h2>🔄 Synchroniser nos deux iPhone</h2>
-      <p class="muted small">Une seule fois sur chaque téléphone : entrez votre adresse, ouvrez l’e-mail reçu, et c’est tout. Pas de mot de passe.</p>
+      <p class="muted small">Une seule fois sur chaque téléphone, au choix : un lien reçu par e-mail, ou votre mot de passe (plus besoin d’e-mail ensuite).</p>
       <form data-action="envoyer" class="stack">
         <input name="email" type="email" inputmode="email" autocomplete="email" placeholder="votre.adresse@gmail.com" value="${esc(enAttente || '')}" required/>
         <button class="btn btn-primary" type="submit">Recevoir le lien de connexion</button>
@@ -398,14 +426,25 @@ App.sync = {
             </div>
           </form>
           <small class="muted">Sur l’iPhone, l’app installée sur l’écran d’accueil ne s’ouvre pas toute seule depuis l’e-mail : c’est pour ça qu’on colle le lien.</small>
-        </div>` : ''}`;
+        </div>` : ''}
+      <h3>🔑 Ou avec un mot de passe</h3>
+      <form data-action="mdp" class="stack">
+        <input name="email" type="email" inputmode="email" autocomplete="username" placeholder="votre.adresse@gmail.com" value="${esc(enAttente || '')}" required/>
+        <input name="mdp" type="password" autocomplete="current-password" placeholder="Mot de passe" required/>
+        <button class="btn btn-primary" type="submit">Se connecter</button>
+      </form>
+      <button class="link-btn" data-action="mdp-creer">Créer ou changer mon mot de passe (un e-mail, une seule fois)</button>`;
     const ov = App.ui.sheet(contenu(), async (action, target) => {
       const redessiner = () => { ov.querySelector('.sheet').innerHTML = '<div class="sheet-grip"></div>' + contenu(); S.maj(); };
       if (action === 'envoyer') {
         const email = target.email.value.trim().toLowerCase();
         if (!email) return;
         try { await S.envoyerLien(email); App.ui.toast('📬 Lien envoyé : ouvrez vos e-mails'); redessiner(); }
-        catch (e) { App.ui.toast('Envoi impossible : ' + (e.code || e.message)); }
+        catch (e) {
+          App.ui.toast(e.code === 'auth/quota-exceeded'
+            ? 'Trop de liens envoyés aujourd’hui (limite gratuite) : utilisez le mot de passe ci-dessous, ou réessayez demain'
+            : 'Envoi impossible : ' + (e.code || e.message));
+        }
       }
       if (action === 'presse') {
         try { const t = await navigator.clipboard.readText(); ov.querySelector('[name=lien]').value = t; }
@@ -416,6 +455,16 @@ App.sync = {
         if (!lien) return App.ui.toast('Collez d’abord le lien reçu');
         if (await S.terminerConnexion(lien)) App.ui.closeSheet();
       }
+      if (action === 'mdp') {
+        if (await S.connexionMotDePasse(target.email.value.trim().toLowerCase(), target.mdp.value)) App.ui.closeSheet();
+      }
+      if (action === 'mdp-creer') {
+        const champ = ov.querySelector('form[data-action=mdp] [name=email]');
+        const email = (champ && champ.value.trim().toLowerCase()) || '';
+        if (!email) return App.ui.toast('Écrivez d’abord votre adresse e-mail juste au-dessus');
+        await S.emailMotDePasse(email);
+      }
+      if (action === 'mdp-moi') await S.emailMotDePasse(S.user.email);
       if (action === 'relancer') { S.arreter(); await S.demarrer(); redessiner(); }
       if (action === 'deconnecter') { await S.deconnecter(); App.ui.closeSheet(); }
     });
