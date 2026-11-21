@@ -53,10 +53,12 @@ Le mode hors-ligne complet nécessite un hébergement en https (étape suivante 
 | Lieu | Quoi | Rythme |
 |---|---|---|
 | 🧺 Producteur | Fruits & légumes | chaque semaine |
-| 🚗 Drive (Leclerc ou Chronodrive) | Frais, viande, poisson, surgelés, crèmerie | chaque semaine |
+| 🥩 Boucherie halal | Viande et volaille | chaque semaine |
+| 🚗 Drive (Leclerc ou Chronodrive) | Frais, poisson, surgelés, crèmerie, essentiels de la maison (eau, papier toilette…) | chaque semaine |
+| 🍼 Orchestra | Purées et compotes de bébé | chaque semaine |
 | 🌾 La Fourche | Bio sec : riz, pâtes, légumineuses, conserves, farines d'avoine/amande, épices, huile | chaque mois |
 
-Modifiable produit par produit : Budget › Ingrédients, prix & lieux d'achat.
+Modifiable produit par produit : menu ☰ › Ingrédients & prix.
 
 ## Règles de calcul
 
