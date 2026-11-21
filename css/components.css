@@ -768,3 +768,17 @@ small.block, .block { display: block; }
   .rond:hover, .icon-btn:hover { filter: brightness(.97); }
   .item .check:hover strong { color: var(--primary); }
 }
+
+/* ---------- Budget : vue du mois ---------- */
+.comparaison { font-weight: 600; font-size: .9rem; margin-top: 6px; }
+.comparaison.hausse { color: var(--danger); }
+.comparaison.baisse { color: var(--ok); }
+.categories { display: flex; flex-direction: column; gap: 8px; }
+.cat-ligne { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; font-size: .9rem; }
+.cat-ligne i { grid-column: 1 / -1; height: 6px; border-radius: 3px; background: var(--surface-2); overflow: hidden; }
+.cat-ligne em { display: block; height: 100%; background: var(--primary); border-radius: inherit; }
+.ligne-mois { padding: 8px 0; border-bottom: 1px solid var(--line); gap: 10px; }
+.ligne-mois:last-child { border-bottom: none; }
+.ligne-mois small { margin-left: 4px; }
+.courses-onglets { width: 100%; max-width: 460px; display: grid; grid-template-columns: repeat(3, 1fr); }
+.courses-onglets .seg { padding: 8px 4px; font-size: .88rem; white-space: nowrap; }
