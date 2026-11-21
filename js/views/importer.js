@@ -99,16 +99,18 @@ App.importUI = {
           <img src="${window.APP_DATA.imageRepas(r)}" alt="" loading="lazy"/><span>${esc(r.nom)}</span>
         </button>`).join('')}</div>` : '';
     return `
+      ${App.ia.dispo() ? `<section class="ia-bloc">
+        <h3>✨ Nouvelles idées avec l’IA</h3>
+        <div class="grid2">
+          <button class="btn btn-ia" data-action="ia-idees" data-mode="saison">🍂 De saison</button>
+          <button class="btn btn-ia" data-action="ia-idees" data-mode="stock">🥫 Avec ce qu’il reste</button>
+        </div>
+      </section>` : ''}
       <p class="muted small">Des idées dans votre bibliothèque. Touchez une recette pour la voir et l’ajouter au menu.</p>
       ${bloc('🥕 De saison', deSaison)}
       ${bloc('🆕 Jamais encore au menu', jamais)}
       ${obj ? bloc(`${obj.emoji} Pour l’objectif « ${esc(obj.nom)} »`, conseilles) : ''}
-      <button class="btn block" data-action="melanger">🔄 D’autres idées</button>
-      ${App.ia.dispo() ? `<h3>✨ Nouvelles idées avec l’IA</h3>
-        <div class="grid2">
-          <button class="btn btn-ia" data-action="ia-idees" data-mode="saison">🍂 De saison</button>
-          <button class="btn btn-ia" data-action="ia-idees" data-mode="stock">🥫 Avec ce qu’il reste</button>
-        </div>` : ''}`;
+      <button class="btn block" data-action="melanger">🔄 D’autres idées</button>`;
   },
 
   async action(action, target, ov) {

@@ -34,6 +34,11 @@ App.views.repas = {
         <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
         <input type="search" name="q" placeholder="Rechercher une recette, un ingrédient…" value="${esc(f.q)}" autocomplete="off" enterkeyhint="search"/>
       </div>
+      ${App.ia.dispo() ? `<div class="ia-raccourci">
+        <span>✨ Idées IA</span>
+        <button class="chip chip-btn btn-ia" data-action="ia-idees" data-mode="saison">🍂 De saison</button>
+        <button class="chip chip-btn btn-ia" data-action="ia-idees" data-mode="stock">🥫 Avec ce qu’il reste</button>
+      </div>` : ''}
       <div class="collections scroll-x">
         ${state.collections.map(c => `
           <button class="collection ${f.collection === c.id ? 'on' : ''}" data-action="collection" data-id="${c.id}">
@@ -117,6 +122,7 @@ App.views.repas = {
       else if (act === 'detail') App.views.repas.detail(a.dataset.id);
       else if (act === 'nouveau') App.views.repas.editer(null);
       else if (act === 'importer') App.importUI.ouvrir('coller');
+      else if (act === 'ia-idees') App.ia.ouvrirIdees(a.dataset.mode);
     };
   },
 
