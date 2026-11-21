@@ -305,7 +305,7 @@ Règles des actions : tu ne modifies jamais le menu toi-même. « placer » : ut
       <div class="ia-fil"></div>
       <form class="envie-form ia-suite" data-action="suite">
         <input name="q" placeholder="Poser une autre question…" autocomplete="off" enterkeyhint="send"/>
-        <button class="btn btn-primary" type="submit" aria-label="Envoyer">➤</button>
+        <button class="envoyer" type="submit" aria-label="Envoyer"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       </form>`, async (action, el) => {
       if (action === 'suite') {
         const q = el.q.value.trim();
