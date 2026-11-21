@@ -36,7 +36,7 @@ App.views.accueil = {
 
   carteAujourdhui(state) {
     const { esc, euro } = App.u;
-    if (App.u.mondayOf() < App.store.debut()) return App.views.accueil.carteDemarrage(state);
+    if (App.u.mondayOf() < App.store.debut()) return '';   // avant le début du suivi : rien à afficher
     const k = App.u.mondayOf();
     const sem = App.store.semaine(k);
     const j = App.JOURS[App.u.todayIndex()];
@@ -109,12 +109,6 @@ App.views.accueil = {
     const { esc, euro } = App.u;
     const sem = App.store.semaine();
     const obj = App.suggest.objectif(sem);
-    const b = App.budget.resume(sem, state);
-    const l = App.shopping.liste(sem, state);
-    const moments = App.MOMENTS.filter(m => m.id === 'soir' || state.settings.midis);
-    const nbCases = App.JOURS.length * moments.length;
-    const nbPrevus = App.JOURS.reduce((n, j) => n + moments.filter(m => sem.slots[`${j.id}-${m.id}`]).length, 0);
-    const courante = App.u.isCurrentWeek(state.semaineActive);
     const date = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
 
     const envies = sem.envies.map(e => {
@@ -176,27 +170,13 @@ App.views.accueil = {
       <section class="card envies-carte">
         <button class="question" data-action="question">${esc(state.settings.question)}</button>
         <form class="envie-form" data-action="envie-add">
-          <input name="texte" placeholder="Un bon poisson, végé tous les soirs, j’ai mes règles…" autocomplete="off" enterkeyhint="done"/>
-          <button class="btn btn-primary" type="submit" aria-label="Ajouter l’envie">＋</button>
+          <input name="texte" placeholder="Un bon poisson, végé tous les soirs, j’ai mes règles…" autocomplete="off" enterkeyhint="send"/>
+          <button class="envoyer" type="submit" aria-label="Envoyer"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
         </form>
-        ${envies ? `<ul class="plain envies">${envies}</ul>` : '<small class="muted">Une envie (« un bon poisson ») ou une consigne (« végétarien tous les soirs », « j’ai mes règles douloureuses », « pas de champignons », « rapide ce week-end ») : le menu s’adapte tout seul.</small>'}
+        ${envies ? `<ul class="plain envies">${envies}</ul>` : ''}
       </section>
       </div>
       <div class="col">
-
-      <h3 class="section-title">${courante ? 'Cette semaine' : `Semaine ${esc(App.u.weekLabel(state.semaineActive))}`}</h3>
-      <div class="tuiles">
-        <button class="tuile" data-action="go" data-route="menu">
-          <small>Menu</small><strong>${nbPrevus}<span>/${nbCases}</span></strong><i><em style="width:${(nbPrevus / nbCases * 100).toFixed(0)}%"></em></i>
-        </button>
-        <button class="tuile" data-action="go" data-route="courses">
-          <small>Courses</small><strong>${l.nbCoches}<span>/${l.nb}</span></strong><i><em style="width:${l.nb ? (l.nbCoches / l.nb * 100).toFixed(0) : 0}%"></em></i>
-        </button>
-        <button class="tuile ${b.depasse ? 'attention' : ''}" data-action="go" data-route="budget">
-          <small>Budget</small><strong>${Math.round(b.total)}<span> €</span></strong><i><em style="width:${b.pct.toFixed(0)}%"></em></i>
-        </button>
-      </div>
-      <small class="muted tuiles-aide">${b.depasse ? `${euro(-b.reste)} au-dessus des ${euro(b.plafond)} — touchez Budget pour alléger` : `Il reste ${euro(b.reste)} sur ${euro(b.plafond)}`}</small>
 
       ${rappels.length ? `<h3 class="section-title">À faire</h3>${rappels.join('')}` : ''}
       </div>
