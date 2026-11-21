@@ -49,7 +49,8 @@ App.views.stock = {
     return `
       ${vide ? App.ui.vide('🥫', 'Le garde-manger est vide', 'Il se remplit tout seul avec « Courses faites ✓ » et la commande La Fourche, puis se vide à mesure que les repas passent. Vous pouvez aussi ajouter ce que vous avez déjà, en bas.',
         '<a class="btn btn-primary" href="#/courses">Voir la liste de courses</a>')
-      : `<section class="card">
+      : `${App.ia.dispo() ? '<button class="btn btn-primary block btn-ia" data-action="ia-idees">✨ Idées de recettes avec ce qu’il reste</button>' : ''}
+      <section class="card">
         <p class="small">Il se remplit avec <strong>« Courses faites ✓ »</strong> et La Fourche, et se vide tout seul quand un repas est passé.</p>
         <p class="muted small">Corrigez-le de temps en temps (touchez un produit), surtout après un repas pas cuisiné ou un produit jeté.</p>
       </section>`}
@@ -99,6 +100,7 @@ App.views.stock = {
       if (!a) return;
       if (a.dataset.action === 'edit') App.views.stock.editer(a.dataset.id);
       if (a.dataset.action === 'repas') App.views.repas.detail(a.dataset.id);
+      if (a.dataset.action === 'ia-idees') App.ia.ouvrirIdees('stock');
     };
     el.onsubmit = e => {
       e.preventDefault();

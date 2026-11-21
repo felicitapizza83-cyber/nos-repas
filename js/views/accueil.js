@@ -123,7 +123,8 @@ App.views.accueil = {
       const auMenu = App.suggest.envieAuMenu(sem, e);
       const slot = e.slotId ? sem.slots[e.slotId] : null;
       const plat = auMenu ? App.store.repas(e.douceurId || (slot && slot.repasId)) : null;
-      const autres = resultats.map(x => x.r).filter(r => !plat || r.id !== plat.id).slice(0, 3);
+      const proposes = e.ia ? e.ia.map(id => App.store.repas(id)).filter(Boolean) : resultats.map(x => x.r);
+      const autres = proposes.filter(r => !plat || r.id !== plat.id).slice(0, 3);
       const plan = auMenu
         ? `<div class="envie-plan">
             ${plat ? `<img class="thumb sm" src="${window.APP_DATA.imageRepas(plat)}" alt=""/>` : '<span class="avatar">💡</span>'}
@@ -243,15 +244,35 @@ App.views.accueil = {
       else if (act === 'envie-repas') App.views.repas.detail(a.dataset.id);
       else if (act === 'envie-creer') App.views.repas.editer(null, a.dataset.texte);
     };
-    el.onsubmit = e => {
+    el.onsubmit = async e => {
       e.preventDefault();
-      const texte = e.target.texte.value.trim();
+      const form = e.target;
+      const texte = form.texte.value.trim();
       if (!texte) return;
       let res = null, bilan = null;
-      const consigne = App.consignes.analyser(texte, App.store.state);
+      let consigne = App.consignes.analyser(texte, App.store.state);
+      let iaRecettes = null;
+      // Ce que l'app ne comprend pas seule (ou une longue phrase) part à l'IA ; le reste reste sur le téléphone
+      const { resultats } = App.suggest.analyserEnvie(texte, App.store.state);
+      const mots = App.u.norm(texte).split(/[^a-z0-9]+/).filter(m => m.length > 2).length;
+      const complexe = mots >= 6;
+      if (App.ia.dispo() && !App.consignes.fiable(consigne) && (consigne ? complexe : (!resultats.length || mots >= 5))) {
+        form.texte.disabled = true;
+        form.classList.add('ia-en-cours');
+        App.ui.toast('✨ L’IA réfléchit…');
+        try {
+          const r = await App.ia.comprendrePhrase(texte, App.store.state);
+          const ia = App.ia.versConsigne(r, App.store.state);
+          if (ia) consigne = ia;
+          else if ((r.recettes || []).length) { consigne = null; iaRecettes = r.recettes.filter(id => App.store.repas(id)).slice(0, 4); }
+        } catch (err) { App.ui.toast(err.message + ' — je fais au mieux sans IA'); }
+        form.texte.disabled = false;
+        form.classList.remove('ia-en-cours');
+      }
       App.store.update(st => {
         const sem = App.store.semaine();
         const e = { id: App.u.uid(), texte, date: Date.now() };
+        if (iaRecettes && iaRecettes.length) e.ia = iaRecettes;
         sem.envies.push(e);
         if (consigne) { e.consigne = consigne; App.consignes.casesFixes(st, e); bilan = App.consignes.appliquer(st, sem, e); }
         else res = App.suggest.placerEnvie(st, sem, e);

@@ -57,6 +57,10 @@ App.views.reglages = {
         ${inter('calories', S.calories, 'Points nutritionnels', 'Calories, protéines, glucides, lipides et fibres')}
         <button class="ligne-lien" data-action="apparence"><span class="grow">🎨 Couleur, clair ou sombre</span><span class="chev">›</span></button>`)}
 
+      ${groupe('✨ Intelligence artificielle', `
+        ${inter('ia', S.ia !== false, 'Utiliser l’IA (Gemini)', 'Photo → recette, phrases libres de l’accueil, idées de recettes')}
+        <small class="muted">Gratuit, via votre projet Firebase. Seuls la photo, le texte ou la phrase concernés sont envoyés à Google (jamais vos noms, pesées ou budget) ; avec l’offre gratuite, Google peut s’en servir pour améliorer ses modèles. Les phrases que l’app comprend seule (régimes, règles, fatigue…) restent sur le téléphone. Nécessite d’être connecté à la synchronisation.</small>`)}
+
       ${groupe('🔄 Synchronisation', `
         <button class="ligne-lien" data-action="sync"><span class="grow">Nos deux iPhone <small class="sync-statut" data-sync-statut></small></span><span class="chev">›</span></button>`)}
 
@@ -95,6 +99,7 @@ App.views.reglages = {
       if (t.name === 'fourcheDansBudget') set(s => { s.fourcheDansBudget = t.checked; });
       if (t.name === 'drive') set(s => { s.drive = t.value; });
       if (t.name === 'calories') set(s => { s.calories = t.checked; });
+      if (t.name === 'ia') set(s => { s.ia = t.checked; });
       if (t.type === 'checkbox') App.ui.haptique();
       if (t.name === 'import' && t.files[0]) {
         try { App.store.importJSON(await t.files[0].text()); App.ui.toast('Données importées'); }
