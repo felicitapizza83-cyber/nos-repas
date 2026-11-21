@@ -673,3 +673,20 @@ small.block, .block { display: block; }
 .sync-statut.erreur { color: var(--danger); }
 .sync-carte { background: var(--surface-2); box-shadow: none; display: flex; flex-direction: column; gap: 4px; margin-top: 12px; }
 .sync-carte strong { word-break: break-all; }
+
+/* ---------- Consignes ---------- */
+.envie.consigne { border-color: color-mix(in srgb, var(--primary) 35%, var(--line)); }
+.consigne-repas { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+.consigne-plat { display: flex; align-items: center; gap: 10px; text-align: left; border: none; background: var(--surface-2); border-radius: 12px; padding: 6px 10px; font: inherit; color: var(--text); cursor: pointer; }
+.consigne-plat span { display: flex; flex-direction: column; font-size: .88rem; line-height: 1.25; }
+.consigne-plat small { font-size: .7rem; }
+.consigne-conseil { margin-top: 8px; font-size: .84rem; }
+
+/* ---------- Courses : onglets Repas / Maison, essentiels ---------- */
+.courses-onglets { margin: 0 auto 12px; }
+.courses-onglets .d-badge { display: inline-grid; min-width: 18px; height: 18px; font-size: .68rem; margin-left: 4px; vertical-align: 1px; }
+.essentiel { gap: 10px; }
+.essentiel.fait strong { color: var(--muted); }
+.ess-emoji { font-size: 1.3rem; width: 28px; text-align: center; flex: none; }
+.ess-choix { display: flex; flex-direction: column; gap: 4px; flex: none; }
+.mini.acheter { background: var(--primary); color: var(--primary-ink); }
