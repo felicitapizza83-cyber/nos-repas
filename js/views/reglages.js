@@ -53,8 +53,11 @@ App.views.reglages = {
         ${inter('calories', S.calories, 'Points nutritionnels', 'Calories, protéines, glucides, lipides et fibres')}
         <button class="ligne-lien" data-action="apparence"><span class="grow">🎨 Couleur, clair ou sombre</span><span class="chev">›</span></button>`)}
 
+      ${groupe('🔄 Synchronisation', `
+        <button class="ligne-lien" data-action="sync"><span class="grow">Nos deux iPhone <small class="sync-statut" data-sync-statut></small></span><span class="chev">›</span></button>`)}
+
       ${groupe('💾 Sauvegarde', `
-        <small class="muted">Pour l’instant, chaque téléphone garde ses propres données. Exportez pour sauvegarder ou envoyer à l’autre téléphone.</small>
+        <small class="muted">Une copie de toutes les données dans un fichier, à garder en lieu sûr.</small>
         <div class="grid2">
           <button class="btn" data-action="export">Exporter</button>
           <label class="btn file-btn">Importer<input type="file" accept="application/json,.json" name="import" hidden/></label>
@@ -67,6 +70,7 @@ App.views.reglages = {
   },
 
   mount(el) {
+    setTimeout(() => App.sync.maj());
     el.onchange = async e => {
       const t = e.target;
       const set = fn => App.store.update(s => fn(s.settings));
@@ -94,6 +98,7 @@ App.views.reglages = {
       const act = a.dataset.action;
       if (act === 'apparence') App.apparence.ouvrir(false);
       else if (act === 'nouveautes') App.drawer.nouveautes();
+      else if (act === 'sync') App.sync.ouvrir();
       else if (act === 'export') App.views.reglages.exporter();
       else if (act === 'reset') App.ui.confirmSheet('Effacer toutes les données (menus, repas ajoutés, suivi, réglages) ? Pensez à exporter avant.', 'Tout effacer', () => App.store.reset());
     };

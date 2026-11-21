@@ -13,7 +13,7 @@ App.views.aide = {
     ['👶', 'Repas de bébé', 'Ligne 👶 sous chaque jour du menu : midi, goûter, soir. Indiquez son mois de naissance dans Réglages pour adapter les purées à son âge.'],
     ['💶', 'Le budget', 'Un seul total : courses + part de La Fourche + repas dehors. Saisissez le montant de vos tickets dans Budget pour un bilan exact. Si la semaine dépasse, « Alléger » remplace les plats les plus chers.'],
     ['⏱', 'Les minuteurs', 'Menu ☰ › Minuteurs, ou depuis le mode cuisine. Ils continuent quand vous changez d’écran et s’affichent en haut. Gardez l’app ouverte pour entendre la sonnerie.'],
-    ['🔄', 'Partager entre nos deux iPhone', 'Bientôt : la synchronisation automatique. En attendant, Réglages › Exporter, puis Importer sur l’autre téléphone.']
+    ['🔄', 'Partager entre nos deux iPhone', 'Menu ☰ › Synchronisation : entrez votre adresse, appui long sur le lien reçu par e-mail › Copier, puis « Coller le lien » dans l’app. Une seule fois par téléphone. Ensuite, tout ce que l’un change apparaît chez l’autre en quelques secondes, même hors ligne (envoi au retour du réseau).']
   ],
 
   lire() { try { return JSON.parse(localStorage.getItem(App.views.aide.KEY)) || []; } catch (e) { return []; } },
