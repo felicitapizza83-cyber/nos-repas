@@ -10,14 +10,31 @@ App.shopping = {
   LIEUX: ['producteur', 'boucherie', 'drive', 'orchestra'],
   NOMS_LIEUX: { producteur: 'Producteur', boucherie: 'Boucherie halal', orchestra: 'Orchestra (bébé)' },
 
-  /** Essentiels de la maison marqués « à acheter » cette semaine (eau calculée selon les litres par jour). */
+  /** Consommation d'un essentiel pour la semaine (l'eau suit les litres bus par jour). */
+  besoinEssentiel(e, state) {
+    if (e.auto === 'eau') return Math.ceil((state.settings.eauLitresParJour || 0) * 7 / 1.5 - 1e-9);
+    return e.parSemaine || 0;
+  },
+
+  /** Ce qu'il faut acheter pour un essentiel, selon ce qu'on a à la maison.
+      Valeur de la semaine : un nombre (ce qu'on a), 'ok' (assez), ou 'acheter' (ancienne version). */
+  calculEssentiel(e, v, state) {
+    const besoin = App.shopping.besoinEssentiel(e, state);
+    const pack = e.pack || 1;
+    let packs = 0;
+    if (typeof v === 'number') packs = Math.max(0, Math.ceil((besoin - v) / pack - 1e-9));
+    else if (v === 'acheter') packs = Math.max(1, Math.ceil(besoin / pack - 1e-9));
+    return { besoin, packs, cout: packs * (e.prix || 0), verifie: v != null };
+  },
+
+  /** Essentiels à acheter cette semaine (d'après les quantités indiquées). */
   essentiels(semaine, state) {
     const m = (semaine.courses && semaine.courses.maison) || {};
-    return (state.essentiels || []).filter(e => m[e.id] === 'acheter').map(e => {
-      const packs = e.auto === 'eau' ? Math.max(1, Math.ceil((state.settings.eauLitresParJour || 0) * 7 / 9 - 1e-9)) : 1;
-      return { id: 'ess-' + e.id, ess: e.id, nom: e.nom, emoji: e.emoji, lieu: e.lieu || 'drive', packs,
-        cout: packs * (e.prix || 0), coche: !!semaine.courses.coches['ess-' + e.id] };
-    });
+    return (state.essentiels || []).map(e => {
+      const c = App.shopping.calculEssentiel(e, m[e.id], state);
+      return { id: 'ess-' + e.id, ess: e.id, nom: e.nom, emoji: e.emoji, lieu: e.lieu || 'drive', packs: c.packs,
+        pack: e.pack || 1, unite: e.unite, cout: c.cout, coche: !!semaine.courses.coches['ess-' + e.id] };
+    }).filter(x => x.packs > 0);
   },
 
   compteDansCourses(slot) {
@@ -164,7 +181,7 @@ App.shopping = {
       const pl = l.placard.filter(i => !i.enStock);
       if (pl.length) { lignes.push('', 'PLACARD'); pl.forEach(i => lignes.push(`▫️ ${i.nom}`)); }
     }
-    if (L.maison.length) { lignes.push('', 'MAISON'); L.maison.forEach(e => lignes.push(`${e.coche ? '✅' : '▫️'} ${e.nom}${e.packs > 1 ? ` × ${e.packs}` : ''}`)); }
+    if (L.maison.length) { lignes.push('', 'MAISON'); L.maison.forEach(e => lignes.push(`${e.coche ? '✅' : '▫️'} ${e.nom}${e.pack > 1 ? ` (pack de ${e.pack})` : ''} × ${e.packs}`)); }
     if (L.ajouts.length) { lignes.push('', 'EN PLUS'); L.ajouts.forEach(a => lignes.push(`${a.coche ? '✅' : '▫️'} ${a.nom}`)); }
     lignes.push('', `Estimation : ${App.u.euro(L.total)}`);
     return lignes.join('\n');
