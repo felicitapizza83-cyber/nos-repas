@@ -20,7 +20,7 @@ App.sync = {
   },
   SDK: 'https://www.gstatic.com/firebasejs/12.6.0/',
   /** Clé de site reCAPTCHA (Fraud Defense, publique) : sert à App Check, obligatoire pour l’IA depuis novembre 2026. */
-  RECAPTCHA: '6LeixisuAAAAANR3WI1_uPDj-tlX9j5oVc5rm-3-',
+  RECAPTCHA: '6LdysisuAAAAAOkOCgRfsI6c11D-tYNDe0QAONXu',
   K_BASE: 'nos-repas-sync-base',   // état tel qu'il était à la dernière synchro (pour calculer les différences)
   K_EMAIL: 'nos-repas-sync-email', // adresse en attente du lien
   K_DERNIERE: 'nos-repas-sync-date',
