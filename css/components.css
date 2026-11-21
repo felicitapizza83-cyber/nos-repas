@@ -794,3 +794,8 @@ small.block, .block { display: block; }
 .ia-idee h3 { margin: 0 0 4px; }
 .envie-form.ia-en-cours input { background-image: linear-gradient(90deg, transparent, color-mix(in srgb, #c454d8 18%, transparent), transparent); background-size: 200% 100%; animation: ia-vague 1.2s linear infinite; }
 @keyframes ia-vague { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+.ia-bloc { margin: 0 0 16px; padding: 12px; border-radius: 16px; background: var(--surface-2); }
+.ia-bloc h3 { margin: 0 0 8px; }
+.ia-raccourci { display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 0 12px; white-space: nowrap; }
+.ia-raccourci span { font-weight: 600; font-size: .88rem; margin-right: 2px; }
+.ia-raccourci .chip-btn { border: none; }
