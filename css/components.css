@@ -801,3 +801,24 @@ small.block, .block { display: block; }
 .ia-raccourci .chip-btn { border: none; }
 /* Badge reCAPTCHA (App Check) : discret ; la mention légale est dans Réglages › Intelligence artificielle */
 .grecaptcha-badge { visibility: hidden !important; }
+
+/* Discussion avec l'IA */
+.ia-fil { display: flex; flex-direction: column; gap: 10px; margin: 8px 0 12px; }
+.ia-bulle { padding: 12px 14px; border-radius: 16px; line-height: 1.45; font-size: .95rem; max-width: 92%; overflow-wrap: anywhere; }
+.ia-bulle.moi { align-self: flex-end; background: var(--primary, #f28c38); color: #fff; border-bottom-right-radius: 4px; }
+.ia-bulle.ia { align-self: flex-start; background: var(--surface-2); border-bottom-left-radius: 4px; }
+.ia-props { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.ia-props .btn { white-space: normal; text-align: left; height: auto; padding: 10px 14px; }
+.ia-fait { font-weight: 600; color: var(--good, #2f8f5b); }
+.ia-suite { position: sticky; bottom: 0; background: var(--surface); padding-top: 8px; }
+
+/* Garde-manger : recherche par lettres + unités */
+.ajout-stock { display: flex; flex-direction: column; gap: 8px; }
+.recherche-ing { position: relative; }
+.recherche-ing input { width: 100%; }
+.suggestions-ing { margin: 6px 0 0; border-radius: 14px; background: var(--surface-2); overflow: hidden; max-height: 320px; overflow-y: auto; }
+.suggestions-ing .option { width: 100%; text-align: left; padding: 11px 14px; border: 0; background: none; font: inherit; color: inherit; display: flex; justify-content: space-between; gap: 8px; }
+.suggestions-ing li + li { border-top: 1px solid rgba(127,127,127,.15); }
+.ajout-ligne { display: flex; gap: 8px; align-items: center; }
+.ajout-ligne input { flex: 1 1 70px; min-width: 0; }
+.ajout-ligne select { flex: 1 1 120px; min-width: 0; }
