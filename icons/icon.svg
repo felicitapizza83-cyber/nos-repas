@@ -1,47 +1,28 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <defs>
     <linearGradient id="fond" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#5E8A68"/>
-      <stop offset="1" stop-color="#2F5A40"/>
+      <stop offset="0" stop-color="#7FA889"/>
+      <stop offset="1" stop-color="#4A7556"/>
     </linearGradient>
-    <radialGradient id="reflet" cx=".3" cy=".08" r=".8">
-      <stop offset="0" stop-color="#fff" stop-opacity=".18"/>
-      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    <radialGradient id="assiette" cx=".42" cy=".38" r=".7">
+      <stop offset="0" stop-color="#FFFDF8"/>
+      <stop offset="1" stop-color="#F1EADC"/>
     </radialGradient>
-    <linearGradient id="terre" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="#B9532B"/>
-      <stop offset=".45" stop-color="#DC7A4C"/>
-      <stop offset="1" stop-color="#A8471F"/>
-    </linearGradient>
-    <linearGradient id="plat" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#C55E33"/>
-      <stop offset="1" stop-color="#8E3A18"/>
+    <linearGradient id="feuille" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#3E6B4B"/>
+      <stop offset="1" stop-color="#6FA078"/>
     </linearGradient>
   </defs>
   <rect width="512" height="512" rx="114" fill="url(#fond)"/>
-  <rect width="512" height="512" rx="114" fill="url(#reflet)"/>
-
-  <g transform="translate(0 28)">
-  <!-- Vapeur en forme de ✓ -->
-  <path d="M206 92 L238 124 L306 52" fill="none" stroke="#F7D9B5" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
-
-  <!-- Bouton du couvercle -->
-  <circle cx="256" cy="154" r="17" fill="url(#terre)"/>
-  <rect x="247" y="164" width="18" height="16" rx="4" fill="#A8471F"/>
-
-  <!-- Couvercle conique -->
-  <path d="M256 176 C 236 220, 200 262, 136 330 L 376 330 C 312 262, 276 220, 256 176 Z" fill="url(#terre)"/>
-  <!-- Motifs crème (bandes et triangles façon poterie de Safi) -->
-  <path d="M206 252 Q 256 262 306 252" fill="none" stroke="#F7E6CF" stroke-width="7" stroke-linecap="round"/>
-  <path d="M176 290 Q 256 304 336 290" fill="none" stroke="#F7E6CF" stroke-width="7" stroke-linecap="round"/>
-  <path d="M196 279 l12 -18 l12 18 M236 284 l12 -18 l12 18 M276 279 l12 -18 l12 18" fill="none" stroke="#F7E6CF" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
-  <circle cx="256" cy="222" r="5" fill="#F7E6CF"/>
-  <circle cx="238" cy="236" r="4" fill="#F7E6CF"/>
-  <circle cx="274" cy="236" r="4" fill="#F7E6CF"/>
-
-  <!-- Plat -->
-  <path d="M100 330 H412 a10 10 0 0 1 9 14 C 404 384, 372 398, 340 398 H172 C 140 398, 108 384, 91 344 a10 10 0 0 1 9 -14 Z" fill="url(#plat)"/>
-  <path d="M120 346 H392" stroke="#F7E6CF" stroke-width="6" stroke-linecap="round" opacity=".9"/>
-  <path d="M150 366 h16 M186 366 h16 M222 366 h16 M258 366 h16 M294 366 h16 M330 366 h16" stroke="#F7E6CF" stroke-width="5" stroke-linecap="round" opacity=".75"/>
-  </g>
+  <!-- Ombre douce de l'assiette -->
+  <circle cx="262" cy="272" r="168" fill="#2F4F3A" opacity=".18"/>
+  <!-- Assiette vue de dessus -->
+  <circle cx="256" cy="262" r="166" fill="url(#assiette)"/>
+  <circle cx="256" cy="262" r="128" fill="none" stroke="#E6DDCB" stroke-width="5"/>
+  <!-- Feuille dont la nervure dessine un ✓ -->
+  <path d="M176 352 C 166 256, 236 182, 352 172 C 344 282, 276 352, 176 352 Z" fill="url(#feuille)"/>
+  <path d="M206 276 L 240 312 L 322 208" fill="none" stroke="#FFFDF8" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Petite tomate -->
+  <circle cx="338" cy="336" r="20" fill="#D9774B"/>
+  <path d="M332 318 q6 -8 12 0" fill="none" stroke="#4A7556" stroke-width="4" stroke-linecap="round"/>
 </svg>
