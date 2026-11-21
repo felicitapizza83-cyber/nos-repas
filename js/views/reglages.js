@@ -60,9 +60,8 @@ App.views.reglages = {
           <label class="btn file-btn">Importer<input type="file" accept="application/json,.json" name="import" hidden/></label>
         </div>`)}
 
-      ${groupe('ℹ️ Version', `
-        <div class="row-between"><span>${App.drawer.VERSION}</span><button class="link-btn" data-action="nouveautes">Quoi de neuf ?</button></div>
-        <a class="ligne-lien" href="v1/"><span class="grow">↩︎ Ouvrir la version 1 <small>Mêmes données, ancien design</small></span><span class="chev">›</span></a>`)}
+      ${groupe('✨ Nouveautés', `
+        <button class="ligne-lien" data-action="nouveautes"><span class="grow">Quoi de neuf dans l’app ?</span><span class="chev">›</span></button>`)}
 
       <button class="btn btn-ghost-danger block" data-action="reset">Tout réinitialiser…</button>`;
   },

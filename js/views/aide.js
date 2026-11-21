@@ -13,8 +13,7 @@ App.views.aide = {
     ['👶', 'Repas de bébé', 'Ligne 👶 sous chaque jour du menu : midi, goûter, soir. Indiquez son mois de naissance dans Réglages pour adapter les purées à son âge.'],
     ['💶', 'Le budget', 'Un seul total : courses + part de La Fourche + repas dehors. Saisissez le montant de vos tickets dans Budget pour un bilan exact. Si la semaine dépasse, « Alléger » remplace les plats les plus chers.'],
     ['⏱', 'Les minuteurs', 'Menu ☰ › Minuteurs, ou depuis le mode cuisine. Ils continuent quand vous changez d’écran et s’affichent en haut. Gardez l’app ouverte pour entendre la sonnerie.'],
-    ['🔄', 'Partager entre nos deux iPhone', 'Bientôt : la synchronisation automatique. En attendant, Réglages › Exporter, puis Importer sur l’autre téléphone.'],
-    ['↩︎', 'Revenir à l’ancienne version', 'Menu ☰ › Revenir à la version 1. Les données sont les mêmes dans les deux versions.']
+    ['🔄', 'Partager entre nos deux iPhone', 'Bientôt : la synchronisation automatique. En attendant, Réglages › Exporter, puis Importer sur l’autre téléphone.']
   ],
 
   lire() { try { return JSON.parse(localStorage.getItem(App.views.aide.KEY)) || []; } catch (e) { return []; } },
@@ -49,8 +48,7 @@ App.views.aide = {
             <li><span class="grow"><small class="muted">${esc(x.type)} · ${new Date(x.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</small>${esc(x.texte)}</span>
               <button class="icon-btn small" data-action="retour-del" data-id="${x.id}" aria-label="Supprimer">✕</button></li>`).join('')}</ul>
           <button class="btn block" data-action="partager">Partager la liste ↗</button>` : ''}
-      </section>
-      <p class="disclaimer">${App.drawer.VERSION} · <a href="v1/">Version 1</a></p>`;
+      </section>`;
   },
 
   mount(el) {
