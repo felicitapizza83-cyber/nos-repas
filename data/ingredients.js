@@ -8,9 +8,31 @@ window.APP_DATA = window.APP_DATA || {};
 
 APP_DATA.lieux = [
   { id: 'producteur', nom: 'Producteur', emoji: '🧺', rythme: 'hebdo' },
+  { id: 'boucherie', nom: 'Boucherie halal', emoji: '🥩', rythme: 'hebdo' },
   { id: 'drive', nom: 'Drive', emoji: '🚗', rythme: 'hebdo' },
   { id: 'fourche', nom: 'La Fourche', emoji: '🌾', rythme: 'mensuel' },
   { id: 'orchestra', nom: 'Orchestra', emoji: '🍼', rythme: 'hebdo' }
+];
+
+/* Essentiels de la maison : à vérifier une fois par semaine (on les oublie souvent).
+   « auto: 'eau' » = quantité calculée selon les litres bus par jour (Réglages). */
+APP_DATA.essentiels = [
+  { id: 'eau', nom: 'Eau (pack 6 × 1,5 L)', emoji: '💧', prix: 2.5, lieu: 'drive', auto: 'eau' },
+  { id: 'papier-toilette', nom: 'Papier toilette', emoji: '🧻', prix: 4.5, lieu: 'drive' },
+  { id: 'essuie-tout', nom: 'Essuie-tout (Sopalin)', emoji: '🧽', prix: 2.8, lieu: 'drive' },
+  { id: 'sacs-poubelle', nom: 'Sacs poubelle', emoji: '🗑️', prix: 3.0, lieu: 'drive' },
+  { id: 'mouchoirs', nom: 'Mouchoirs', emoji: '🤧', prix: 2.0, lieu: 'drive' },
+  { id: 'liquide-vaisselle', nom: 'Liquide vaisselle', emoji: '🍽️', prix: 1.8, lieu: 'drive' },
+  { id: 'lave-vaisselle', nom: 'Pastilles lave-vaisselle', emoji: '✨', prix: 6.5, lieu: 'drive' },
+  { id: 'lessive', nom: 'Lessive', emoji: '👕', prix: 8.0, lieu: 'drive' },
+  { id: 'eponges', nom: 'Éponges', emoji: '🧼', prix: 1.5, lieu: 'drive' },
+  { id: 'menage', nom: 'Produit ménager', emoji: '🧴', prix: 2.5, lieu: 'drive' },
+  { id: 'alu-film', nom: 'Papier alu / film / sacs congélation', emoji: '📦', prix: 2.5, lieu: 'drive' },
+  { id: 'gel-douche', nom: 'Gel douche / savon', emoji: '🚿', prix: 2.5, lieu: 'drive' },
+  { id: 'dentifrice', nom: 'Dentifrice', emoji: '🪥', prix: 2.0, lieu: 'drive' },
+  { id: 'shampoing', nom: 'Shampoing', emoji: '💆', prix: 3.0, lieu: 'drive' },
+  { id: 'couches', nom: 'Couches bébé', emoji: '👶', prix: 12.0, lieu: 'drive' },
+  { id: 'lingettes', nom: 'Lingettes / liniment bébé', emoji: '🍼', prix: 3.0, lieu: 'drive' }
 ];
 
 APP_DATA.rayons = [
@@ -194,6 +216,7 @@ APP_DATA.rayons = [
   const lieuPar = (id, rayon) =>
     rayon === 'Bébé' ? 'orchestra'
       : rayon === FL ? 'producteur'
+      : rayon === BV ? 'boucherie'
       : (rayon === PL || FOURCHE_EPICERIE.has(id)) ? 'fourche'
       : 'drive';
 

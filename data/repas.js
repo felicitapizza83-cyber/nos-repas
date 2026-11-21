@@ -2,7 +2,7 @@
    Quantités pour 2 adultes (portions: 2). null = « un peu » (produit du placard).
    Tags : voir APP_DATA.tags ; ils relient les repas aux objectifs naturopathie. */
 window.APP_DATA = window.APP_DATA || {};
-APP_DATA.version = 6; // à augmenter quand on ajoute des repas / ingrédients de base
+APP_DATA.version = 7; // à augmenter quand on ajoute des repas / ingrédients de base
 
 APP_DATA.tags = {
   'volaille': 'Volaille',
