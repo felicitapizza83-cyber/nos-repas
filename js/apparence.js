@@ -3,8 +3,7 @@
 App.apparence = {
   KEY: 'nos-repas-apparence',
   COULEURS: [
-    { id: 'marrakech', nom: 'Marrakech', hex: 'linear-gradient(135deg, #3f6b4f 50%, #c2603a 50%)' },
-    { id: 'orange', nom: 'Orange', hex: '#b85410' },
+    { id: 'orange', nom: 'Orange', hex: '#ef7d16' },
     { id: 'sauge', nom: 'Sauge', hex: '#4f7a5a' },
     { id: 'framboise', nom: 'Framboise', hex: '#d2386a' },
     { id: 'ocean', nom: 'Océan', hex: '#1b7f93' },
@@ -20,12 +19,8 @@ App.apparence = {
   lire() {
     let p = {};
     try { p = JSON.parse(localStorage.getItem(App.apparence.KEY)) || {}; } catch (e) { p = {}; }
-    // Passage à l'identité Marrakech : l'ancien orange par défaut devient Marrakech (une seule fois)
-    if (!p.marrakech) {
-      if (!p.couleur || p.couleur === 'orange') p.couleur = 'marrakech';
-      p.marrakech = true;
-      App.apparence.ecrire(p);
-    }
+    // L'essai « Marrakech » a été annulé : ceux qui l'avaient reviennent à l'orange
+    if (p.couleur === 'marrakech') { p.couleur = 'orange'; App.apparence.ecrire(p); }
     return p;
   },
   ecrire(p) {
@@ -34,7 +29,7 @@ App.apparence = {
 
   appliquer(p) {
     const h = document.documentElement;
-    h.dataset.couleur = p.couleur || 'marrakech';
+    h.dataset.couleur = p.couleur || 'orange';
     if (p.mode === 'light' || p.mode === 'dark') h.dataset.theme = p.mode;
     else delete h.dataset.theme;
     // Couleur de la barre d'état (iPhone) assortie au fond
@@ -55,7 +50,7 @@ App.apparence = {
   },
 
   ouvrir(bienvenue) {
-    const p = { couleur: 'marrakech', mode: 'auto', ...App.apparence.lire(), vu: true };
+    const p = { couleur: 'orange', mode: 'auto', ...App.apparence.lire(), vu: true };
     App.apparence.ecrire(p);
     const { esc } = App.u;
     const contenu = () => `
