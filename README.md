@@ -8,6 +8,11 @@ envies de la semaine → objectif naturopathie → menu → liste de courses →
 - **V2 (racine)** : accueil « repas du jour », menu ☰ (minuteurs, convertisseur, garde-manger, aide, réglages), 5 onglets, points nutritionnels, budget unique avec « Alléger », courses à glisser et mode magasin.
 - **V1 (`v1/`)** : l'ancien design, conservé tel quel. Mêmes données (même stockage), mêmes photos, polices et icônes que la V2.
 
+## Écrans
+
+- iPhone : barre d'onglets flottante en bas, fenêtres qui montent du bas.
+- Ordinateur (Mac ou PC) et tablette en paysage : menu latéral, accueil en deux colonnes, menu de la semaine sur 2 ou 3 colonnes, recettes en grande grille, lieux de courses côte à côte, fenêtres centrées.
+
 ## Synchronisation des deux iPhone
 
 Firebase (projet `nos-repas-131b1`, compte Google perso, formule gratuite Spark) :
