@@ -701,3 +701,70 @@ small.block, .block { display: block; }
 .ess-res.attente { color: var(--muted); font-weight: 500; }
 .ess-res.acheter { color: var(--primary); }
 .ess-res.ok { color: var(--ok); }
+
+/* =====================================================================
+   Grand écran (ordinateur Mac ou PC, tablette en paysage)
+   ===================================================================== */
+.colonnes > .col > :last-child { margin-bottom: 12px; }
+@media (min-width: 900px) {
+  /* Écrans « tableau de bord » plus larges ; les écrans de lecture restent confortables */
+  .topbar-in, .view { max-width: 760px; }
+  body[data-ecran="accueil"] .topbar-in, .view[data-ecran="accueil"],
+  body[data-ecran="menu"] .topbar-in, .view[data-ecran="menu"],
+  body[data-ecran="repas"] .topbar-in, .view[data-ecran="repas"],
+  body[data-ecran="courses"] .topbar-in, .view[data-ecran="courses"] { max-width: 1180px; }
+  .view { padding-left: 28px; padding-right: 28px; }
+  .topbar { padding-left: 28px; padding-right: 28px; }
+  .topbar h1 { font-size: 2rem; }
+
+  /* Fenêtres : centrées au lieu de monter du bas */
+  .sheet-overlay { align-items: center; padding: 24px; }
+  .sheet {
+    max-width: 580px; max-height: 86vh; border-radius: 24px;
+    padding: 16px 24px 24px; transform: translateY(18px) scale(.98); opacity: 0;
+    transition: transform .2s ease-out, opacity .2s;
+  }
+  .sheet-overlay.open .sheet { transform: none; opacity: 1; }
+  .sheet-grip { display: none; }
+  .sheet-hero { width: calc(100% + 48px); margin: -16px -24px 14px; border-radius: 24px 24px 0 0; }
+
+  /* Recettes : autant de colonnes que la largeur le permet */
+  .grille-recettes { grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 16px; }
+  .ajout-grille { grid-template-columns: repeat(4, 1fr); }
+
+  /* Courses : bouton « Courses faites » compact, à droite */
+  .view[data-ecran="courses"] .sticky-bottom { display: flex; justify-content: flex-end; }
+  .view[data-ecran="courses"] .block-btn { width: auto; min-width: 320px; }
+  .toast { left: calc(50% + var(--sidebar-w) / 2) !important; }
+}
+
+@media (min-width: 1100px) {
+  /* Accueil : le jour et les envies à gauche, la semaine et les rappels à droite */
+  .colonnes { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+  .colonnes > .col > .section-title:first-child { margin-top: 4px; }
+  .jour-photo img { height: 240px; }
+  /* Menu : deux jours par ligne */
+  .jours-grille { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; align-items: start; margin-bottom: 14px; }
+  .jours-grille .day { margin: 0; }
+  /* Courses : les lieux d'achat côte à côte */
+  .lieux-grille { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 28px; align-items: start; }
+}
+
+@media (min-width: 1500px) {
+  .jours-grille { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  body[data-ecran="menu"] .topbar-in, .view[data-ecran="menu"] { max-width: 1440px; }
+}
+
+/* Souris : retours visuels au survol (sans effet sur iPhone) */
+@media (hover: hover) and (pointer: fine) {
+  .link-card, .recette, .tuile, .bande-jour, .slot, .ligne-budget, .jour-ligne, .option, .decouvrir-carte, .collection, .d-item, .consigne-plat, .ess-tete { transition: transform .15s, box-shadow .15s, background-color .15s; }
+  .link-card:hover, .recette:hover, .tuile:hover, .decouvrir-carte:hover, .collection:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .bande-jour:hover { transform: translateY(-1px); }
+  .slot:hover, .jour-ligne:hover, .ligne-budget:hover, .consigne-plat:hover { background-color: color-mix(in srgb, var(--primary) 8%, var(--surface-2)); }
+  .option:hover { border-color: var(--primary); }
+  .btn:hover { filter: brightness(1.05); }
+  .btn:not(.btn-primary):not(.btn-danger):hover { border-color: color-mix(in srgb, var(--primary) 40%, var(--line)); }
+  .chip-btn:hover, .mini:hover { border-color: var(--primary); }
+  .rond:hover, .icon-btn:hover { filter: brightness(.97); }
+  .item .check:hover strong { color: var(--primary); }
+}
