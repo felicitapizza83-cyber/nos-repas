@@ -690,3 +690,14 @@ small.block, .block { display: block; }
 .ess-emoji { font-size: 1.3rem; width: 28px; text-align: center; flex: none; }
 .ess-choix { display: flex; flex-direction: column; gap: 4px; flex: none; }
 .mini.acheter { background: var(--primary); color: var(--primary-ink); }
+.essentiels { padding: 4px 14px; }
+.essentiels .essentiel { display: flex; flex-direction: column; gap: 6px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.essentiels .essentiel:last-child { border-bottom: none; }
+.ess-tete { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.ess-ligne { display: flex; align-items: center; gap: 10px; padding-left: 38px; }
+.stepper { display: flex; align-items: center; gap: 4px; }
+.stepper input { width: 3.6rem; min-height: 34px; padding: 4px; text-align: center; font-weight: 600; }
+.ess-res { margin-left: 38px; font-size: .8rem; font-weight: 600; }
+.ess-res.attente { color: var(--muted); font-weight: 500; }
+.ess-res.acheter { color: var(--primary); }
+.ess-res.ok { color: var(--ok); }
