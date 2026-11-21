@@ -8,6 +8,14 @@ envies de la semaine → objectif naturopathie → menu → liste de courses →
 - **V2 (racine)** : accueil « repas du jour », menu ☰ (minuteurs, convertisseur, garde-manger, aide, réglages), 5 onglets, points nutritionnels, budget unique avec « Alléger », courses à glisser et mode magasin.
 - **V1 (`v1/`)** : l'ancien design, conservé tel quel. Mêmes données (même stockage), mêmes photos, polices et icônes que la V2.
 
+## Synchronisation des deux iPhone
+
+Firebase (projet `nos-repas-131b1`, compte Google perso, formule gratuite Spark) :
+- connexion par lien e-mail, sans mot de passe ;
+- base Firestore à Paris ; règles : seules les deux adresses du foyer peuvent lire et écrire ;
+- `js/sync.js` envoie seulement les différences à chaque sauvegarde et reçoit en direct celles de l'autre téléphone.
+L'app elle-même reste hébergée sur GitHub Pages : les mises à jour se font comme avant.
+
 ## Tester sur le Mac
 
 ```bash
