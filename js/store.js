@@ -1,6 +1,5 @@
-/* État de l'application + sauvegarde.
-   Étape 1 : sauvegarde locale (localStorage) sur chaque téléphone.
-   Étape 2 : seul ce fichier changera pour synchroniser vos deux iPhone. */
+/* État de l'application + sauvegarde sur le téléphone (localStorage).
+   La synchronisation entre les deux iPhone (js/sync.js) part de chaque sauvegarde. */
 (function () {
   const KEY = 'repas-app-v1';
   const listeners = new Set();
@@ -120,9 +119,11 @@
     }
   }
 
-  function save() {
+  function save(depuisSync) {
     try { localStorage.setItem(KEY, JSON.stringify(state)); }
     catch (e) { App.ui.toast('Impossible de sauvegarder sur cet appareil'); }
+    // Envoyer les changements à l'autre téléphone (sauf s'ils viennent de lui)
+    if (!depuisSync && App.sync) App.sync.local(state);
   }
 
   App.store = {
@@ -134,6 +135,14 @@
     /** Modifie l'état puis sauvegarde et rafraîchit l'écran. */
     update(fn) { fn(state); save(); listeners.forEach(l => l(state)); },
     subscribe(fn) { listeners.add(fn); return () => listeners.delete(fn); },
+
+    /** Changements venus de l'autre téléphone : appliqués, sauvegardés, affichés, mais pas renvoyés. */
+    appliquerDistant(fn) {
+      fn(state);
+      migrer();
+      save(true);
+      listeners.forEach(l => l(state));
+    },
 
     semaine(k = state.semaineActive) {
       if (!state.semaines[k]) state.semaines[k] = nouvelleSemaine();

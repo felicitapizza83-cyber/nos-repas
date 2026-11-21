@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     App.router.init();
     App.minuteurs.init();
     App.drawer.init();
+    App.sync.init(); // en arrière-plan : l'app reste utilisable sans réseau
   } catch (err) {
     // Jamais de page blanche : on explique et on propose de recharger.
     console.error(err);

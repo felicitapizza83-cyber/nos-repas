@@ -49,6 +49,7 @@ App.drawer = {
         ${item('ingredients', '🏷️', 'Ingrédients & prix', 'Prix, lieux d’achat')}
 
         <div class="d-section">L’app</div>
+        ${item('sync', '🔄', 'Synchronisation', App.u.esc(App.sync.statut().txt), App.sync.user ? '' : (App.sync.etat === 'refuse' || App.sync.etat === 'erreur' ? '!' : ''))}
         ${item('reglages', '⚙️', 'Réglages', 'Famille, bébé, budget, sauvegarde')}
         ${item('apparence', '🎨', 'Apparence', 'Couleur, clair ou sombre')}
         ${item('aide', '💬', 'Aide & support', 'Questions fréquentes, nous écrire')}
@@ -81,6 +82,7 @@ App.drawer = {
     if (routes[d]) return App.router.go(routes[d]);
     setTimeout(() => {
       if (d === 'minuteurs') App.minuteurs.ouvrir();
+      else if (d === 'sync') App.sync.ouvrir();
       else if (d === 'convertir') App.drawer.convertisseur();
       else if (d === 'importer') App.importUI.ouvrir('coller');
       else if (d === 'apparence') App.apparence.ouvrir(false);
@@ -162,6 +164,7 @@ App.drawer = {
         <li><b>📅 Menu</b> Bandeau des jours, moins de boutons ; les réglages bébé passent dans Réglages.</li>
         <li><b>📖 Recettes</b> Grandes photos, recherche plus large, un seul bouton « + ».</li>
         <li><b>⚙️ Réglages</b> Tout au même endroit : famille, bébé, budget, sauvegarde.</li>
+        <li><b>🔄 Synchronisation</b> Vos deux iPhone partagent menus, courses, envies, recettes et budget, en direct.</li>
       </ul>
       <button class="btn btn-primary block" data-action="ok">Super</button>`, a => { if (a === 'ok') App.ui.closeSheet(); });
   }
