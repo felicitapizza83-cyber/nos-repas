@@ -1,5 +1,6 @@
 /* Démarrage de l'application. */
 document.addEventListener('DOMContentLoaded', () => {
+  App.apparence.init();
   App.store.init();
   App.router.init();
   document.addEventListener('visibilitychange', () => { if (!document.hidden) App.store.rafraichir(); });
