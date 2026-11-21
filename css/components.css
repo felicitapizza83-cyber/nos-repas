@@ -799,3 +799,5 @@ small.block, .block { display: block; }
 .ia-raccourci { display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 0 12px; white-space: nowrap; }
 .ia-raccourci span { font-weight: 600; font-size: .88rem; margin-right: 2px; }
 .ia-raccourci .chip-btn { border: none; }
+/* Badge reCAPTCHA (App Check) : discret ; la mention légale est dans Réglages › Intelligence artificielle */
+.grecaptcha-badge { visibility: hidden !important; }
