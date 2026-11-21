@@ -333,7 +333,8 @@ App.suggest = {
   placerEnvie(state, semaine, e, repasId = null) {
     const { douceur, resultats } = App.suggest.analyserEnvie(e.texte, state);
     const deja = new Set(Object.values(semaine.slots).map(s => s && s.repasId));
-    let choix = repasId || (resultats.find(x => !deja.has(x.r.id)) || resultats[0] || {}).r?.id || null;
+    let choix = repasId || (e.ia || []).find(id => !deja.has(id) && App.store.repas(id))
+      || (resultats.find(x => !deja.has(x.r.id)) || resultats[0] || {}).r?.id || null;
     if (douceur && !choix) choix = (App.suggest.candidatsDouceur(state, semaine)[0] || {}).id || null; // « envie de sucré »
 
     // Envie sucrée : elle remplace un des gâteaux de la semaine

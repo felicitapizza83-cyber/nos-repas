@@ -67,9 +67,17 @@ App.consignes = {
     'envie', 'repas', 'cuisine', 'cuisiner', 'energie', 'lait', 'force', 'courage', 'idee', 'midi', 'soir'],
 
   // ---------- Lecture de la phrase ----------
+  /** États de santé et régimes : toujours traités sur le téléphone, jamais envoyés à l'IA. */
+  SENSIBLES: ['regles', 'fatigue', 'ventre', 'rhume', 'transit', 'stress', 'nausee', 'lait', 'sport'],
+  /** La consigne trouvée seule est-elle sûre (santé, régime, exclusion), ou vaut-il mieux demander à l'IA ? */
+  fiable(c) {
+    return !!c && (c.regimes.some(r => r !== 'leger-regime' && r !== 'rapide') || c.exclus.length
+      || c.etats.some(x => App.consignes.SENSIBLES.includes(x)));
+  },
+
   /** Renvoie une consigne, ou null si la phrase est une simple envie de plat. */
   analyser(texte, state) {
-    const n = ' ' + App.u.norm(texte).replace(/['’]/g, ' ').replace(/\s+/g, ' ') + ' ';
+    const n = ' ' + App.u.norm(texte).replace(/[^a-z0-9-]+/g, ' ').replace(/\s+/g, ' ').trim() + ' ';
     const contient = m => n.includes(App.u.norm(m));
     const etats = App.consignes.ETATS.filter(E => E.mots.some(contient));
     const regimes = [];
@@ -155,6 +163,9 @@ App.consignes = {
       R.favoriser.push(...e.favoriser); R.noms.push(...e.noms); R.eviter.push(...e.eviter);
     });
     R.positifs = (c.positifs || []).map(i => App.suggest.ENVIES[i]).filter(Boolean);
+    // Comprise par l'IA : tags à favoriser et plats qu'elle a choisis
+    R.favoriser.push(...(c.favoriserTags || []));
+    R.preferes = [...(c.recettesIA || [])];
     // Une contrainte l'emporte sur un conseil (ex. végétarien + règles : pas de viande rouge)
     R.favoriser = R.favoriser.filter(t => !R.tags.includes(t));
     return R;
@@ -185,6 +196,7 @@ App.consignes = {
     const nom = App.u.norm(r.nom);
     return r.tags.filter(t => R.favoriser.includes(t)).length * 2
       + R.noms.filter(x => nom.includes(App.u.norm(x))).length * 2
+      + ((R.preferes || []).includes(r.id) ? 6 : 0)
       - r.tags.filter(t => R.eviter.includes(t)).length * 3;
   },
 
@@ -224,6 +236,24 @@ App.consignes = {
     const c = e.consigne, R = App.consignes.regles(c);
     const bilan = { changes: [], gardes: [], cases: 0 };
     c.avant = c.avant || {};
+    // Repas précis choisis par l'IA (« samedi soir… et dimanche midi… »)
+    const aVenir = App.suggest.casesAVenir(state);
+    (c.placements || []).forEach(p => {
+      const slotId = `${p.jour}-${p.moment}`;
+      if (!aVenir.includes(slotId) || !App.store.repas(p.recette)) return;
+      bilan.cases++;
+      const s = semaine.slots[slotId];
+      if (s && (s.type === 'ext' || s.consomme)) return;
+      if (s && (s.source === 'manuel' || s.envieId) && s.consigneId !== e.id) { bilan.gardes.push(slotId); return; }
+      if (s && s.repasId === p.recette) return;
+      if (!(slotId in c.avant)) c.avant[slotId] = s ? JSON.parse(JSON.stringify(s)) : null;
+      App.stock.annulerConso(state, s);
+      semaine.slots[slotId] = { type: 'maison', repasId: p.recette, source: 'consigne', consigneId: e.id };
+      bilan.changes.push(slotId);
+    });
+    const seulementPlacements = (c.placements || []).length && !c.regimes.length && !c.etats.length && !c.exclus.length
+      && !(c.favoriserTags || []).length && !(c.positifs || []).length;
+    if (seulementPlacements) { c.changes = bilan.changes; c.gardes = bilan.gardes; return bilan; }
     App.consignes.cases(state, c).forEach(slotId => {
       bilan.cases++;
       const s = semaine.slots[slotId];
@@ -231,7 +261,7 @@ App.consignes = {
       if (s && s.consomme) return;
       const r = s && s.repasId && App.store.repas(s.repasId);
       const ok = r && App.consignes.respecte(r, R) && App.consignes.correspond(r, R);
-      const aFavoriser = R.favoriser.length || R.noms.length;
+      const aFavoriser = R.favoriser.length || R.noms.length || (R.preferes || []).length;
       if (ok && (!aFavoriser || App.consignes.bienfait(r, R) > 0 || s.source === 'manuel')) return;
       // Choisi à la main (ou une envie) : on ne touche pas, on signale si ça ne respecte pas la consigne
       if (s && (s.source === 'manuel' || s.envieId) && s.consigneId !== e.id) { if (!ok) bilan.gardes.push(slotId); return; }
@@ -291,7 +321,8 @@ App.consignes = {
       ...c.regimes.map(id => (App.consignes.REGIMES.find(x => x.id === id) || {}).label),
       ...c.etats.map(id => (App.consignes.ETATS.find(x => x.id === id) || {}).label),
       ...(c.exclus.length ? [`Sans ${c.exclus.map(id => (App.store.ingredient(id) || { nom: id }).nom.toLowerCase()).slice(0, 3).join(', ')}`] : []),
-      ...(c.positifs || []).map(i => { const P = App.suggest.ENVIES[i]; return P ? (P.cat || P.mots[0]).replace(/^./, x => x.toUpperCase()) : ''; })
+      ...(c.positifs || []).map(i => { const P = App.suggest.ENVIES[i]; return P ? (P.cat || P.mots[0]).replace(/^./, x => x.toUpperCase()) : ''; }),
+      ...(c.ia && c.resumeIA ? [`✨ ${c.resumeIA}`] : [])
     ].filter(Boolean);
   },
 
