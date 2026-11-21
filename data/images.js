@@ -64,9 +64,27 @@ APP_DATA.images = {
   accueil: 'marche'
 };
 
+// Photos générées sur mesure (images/recettes/<id>.jpg) : prioritaires.
+APP_DATA.images.recettes = [
+    'bavette-risotto', 'blanquette-poulet-legere', 'boeuf-carottes', 'galettes-sarrasin-completes',
+    'hachis-parmentier-patate-douce', 'harira', 'kefta-boulgour', 'lentilles-salade-crevettes',
+    'linguine-truite-epinards', 'loubia', 'pates-legumes-feta', 'pates-pesto-maquereau',
+    'pates-poulet-champignons', 'pates-poulet-epinards', 'riz-algerienne-poulet', 'riz-legumes-omelette',
+    'salade-gnocchis-legumes', 'salade-nicoise', 'salade-pates-thon-avocat', 'soupe-thai-poulet-coco',
+    'tajine-kefta-oeufs', 'tortilla-tarte'
+];
+
+APP_DATA.imageBebe = function (r) {
+  if (r.source === 'orchestra') return 'bebe-pot';
+  if (r.moment === 'fruit') return 'bebe-compote';
+  const n = String(r.nom).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  return /courgette|haricots verts|petits pois|brocoli|epinard|poireau/.test(n) ? 'bebe-puree-verte' : 'bebe-puree-orange';
+};
+
 APP_DATA.imageRepas = function (r) {
   const I = APP_DATA.images;
-  if (r.categorie === 'Bébé') return `images/${r.moment === 'fruit' ? 'clafoutis' : 'soupe'}.jpg`;
+  if (r.categorie === 'Bébé') return `images/recettes/${APP_DATA.imageBebe(r)}.jpg`;
+  if (I.recettes.includes(r.id)) return `images/recettes/${r.id}.jpg`;
   let nom = I.parRepas[r.id];
   if (!nom) {
     const n = String(r.nom).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
