@@ -34,7 +34,18 @@ APP_DATA.essentiels = [
   { id: 'dentifrice', nom: 'Dentifrice', emoji: '🪥', unite: 'tube', pack: 1, parSemaine: 0.25, prix: 2.0, lieu: 'drive' },
   { id: 'shampoing', nom: 'Shampoing', emoji: '💆', unite: 'flacon', pack: 1, parSemaine: 0.25, prix: 3.0, lieu: 'drive' },
   { id: 'couches', nom: 'Couches bébé', emoji: '👶', unite: 'couche', pack: 44, parSemaine: 42, prix: 12.0, lieu: 'drive' },
-  { id: 'lingettes', nom: 'Lingettes / liniment bébé', emoji: '🍼', unite: 'paquet', pack: 1, parSemaine: 1, prix: 3.0, lieu: 'drive' }
+  { id: 'lingettes', nom: 'Lingettes / liniment bébé', emoji: '🍼', unite: 'paquet', pack: 1, parSemaine: 1, prix: 3.0, lieu: 'drive' },
+  // Desserts, fruits et en-cas : pas dans le menu, seulement dans les courses (groupe « desserts »)
+  { id: 'fruits', groupe: 'desserts', nom: 'Fruits de saison (pommes, poires, clémentines…)', emoji: '🍎', unite: 'fruit', pack: 1, parSemaine: 14, prix: 0.4, lieu: 'producteur' },
+  { id: 'bananes', groupe: 'desserts', nom: 'Bananes', emoji: '🍌', unite: 'banane', pack: 1, parSemaine: 4, prix: 0.25, lieu: 'producteur' },
+  { id: 'compotes', groupe: 'desserts', nom: 'Compotes sans sucre ajouté', emoji: '🍏', unite: 'gourde', pack: 4, parSemaine: 4, prix: 2.2, lieu: 'drive' },
+  { id: 'yaourts', groupe: 'desserts', nom: 'Yaourts nature / skyr', emoji: '🥛', unite: 'pot', pack: 4, parSemaine: 8, prix: 1.8, lieu: 'drive' },
+  { id: 'faisselle', groupe: 'desserts', nom: 'Fromage blanc / faisselle', emoji: '🥣', unite: 'pot', pack: 1, parSemaine: 1, prix: 1.9, lieu: 'drive' },
+  { id: 'glaces', groupe: 'desserts', nom: 'Glaces / sorbets', emoji: '🍨', unite: 'glace', pack: 6, parSemaine: 2, prix: 3.5, lieu: 'drive' },
+  { id: 'chocolat', groupe: 'desserts', nom: 'Chocolat noir (un carré après le repas)', emoji: '🍫', unite: 'tablette', pack: 1, parSemaine: 0.5, prix: 1.9, lieu: 'drive' },
+  { id: 'oleagineux', groupe: 'desserts', nom: 'Amandes / noix (en-cas)', emoji: '🥜', unite: 'sachet', pack: 1, parSemaine: 0.5, prix: 3.0, lieu: 'drive' },
+  { id: 'fruits-secs', groupe: 'desserts', nom: 'Dattes / fruits secs', emoji: '🌴', unite: 'sachet', pack: 1, parSemaine: 0.25, prix: 2.5, lieu: 'drive' },
+  { id: 'biscuits', groupe: 'desserts', nom: 'Biscuits / gâteaux secs', emoji: '🍪', unite: 'paquet', pack: 1, parSemaine: 0.5, prix: 2.0, lieu: 'drive' }
 ];
 
 APP_DATA.rayons = [
