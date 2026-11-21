@@ -13,7 +13,7 @@
   <script>
     try {
       var a = JSON.parse(localStorage.getItem('nos-repas-apparence')) || {};
-      document.documentElement.dataset.couleur = a.couleur || 'orange';
+      document.documentElement.dataset.couleur = (!a.marrakech && (!a.couleur || a.couleur === 'orange')) ? 'marrakech' : (a.couleur || 'marrakech');
       if (a.mode === 'light' || a.mode === 'dark') document.documentElement.dataset.theme = a.mode;
     } catch (e) {}
   </script>
