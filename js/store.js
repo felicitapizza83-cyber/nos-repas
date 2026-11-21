@@ -94,6 +94,12 @@
       });
       state.migrations.push('essentiels-qte');
     }
+    // Desserts, fruits et en-cas (dans les courses seulement)
+    if (!state.migrations.includes('desserts')) {
+      D.essentiels.filter(e => e.groupe === 'desserts' && !state.essentiels.some(x => x.id === e.id))
+        .forEach(e => state.essentiels.push(structuredClone(e)));
+      state.migrations.push('desserts');
+    }
     // Démarrage du foyer : le plan commence le lundi 23 novembre 2026
     if (!state.migrations.includes('debut-2026-11-23')) {
       if (!state.settings.debut) state.settings.debut = '2026-11-23';
