@@ -34,6 +34,8 @@ App.router = {
       if (a && view.teteClic) view.teteClic(a.dataset.action, a);
     };
     el.classList.toggle('entree', entree);
+    el.dataset.ecran = route;
+    document.body.dataset.ecran = route;
     document.querySelectorAll('.tabbar a').forEach(a =>
       a.classList.toggle('active', a.dataset.route === (parent || route)));
     window.scrollTo(0, keepScroll ? y : 0);
