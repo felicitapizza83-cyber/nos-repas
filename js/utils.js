@@ -8,6 +8,11 @@ App.JOURS = [
   { id: 'dim', nom: 'Dimanche' }
 ];
 App.MOMENTS = [{ id: 'midi', nom: 'Midi' }, { id: 'soir', nom: 'Soir' }];
+App.MOMENTS_BEBE = [
+  { id: 'bebe-midi', nom: 'Midi', type: 'legumes' },
+  { id: 'bebe-gouter', nom: 'Goûter', type: 'fruit' },
+  { id: 'bebe-soir', nom: 'Soir', type: 'legumes' }
+];
 
 App.u = {
   esc(s) {

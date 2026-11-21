@@ -15,6 +15,7 @@
       drive: 'Leclerc Drive ou Chronodrive',
       fourcheDansBudget: true, // la commande La Fourche est répartie dans le budget de la semaine
       calories: true,          // afficher les calories estimées par portion
+      bebe: { actif: true, naissance: null, orchestraParSemaine: 3 },
       noms: ['Elle', 'Lui'],
       moi: 0,                 // qui utilise ce téléphone
       question: 'Qu’est-ce qui vous ferait plaisir cette semaine ?',
@@ -60,7 +61,7 @@
       courses: { coches: {}, stock: {}, ajouts: [], auDrive: {}, restesJetes: {} },
       achats: null,            // ce qui a été acheté (« Courses faites ✓ »)
       coursesFaitesLe: null,
-      depenses: { drive: null, producteur: null }
+      depenses: { drive: null, producteur: null, orchestra: null }
     };
   }
 
@@ -70,6 +71,7 @@
     const def = settingsParDefaut();
     state.settings = { ...def, ...state.settings };
     state.settings.profils = state.settings.profils || def.profils;
+    state.settings.bebe = { ...def.bebe, ...(state.settings.bebe || {}) };
     state.fourche = state.fourche || {};
     state.suivi = state.suivi || [[], []];
     state.stock = state.stock || {};
