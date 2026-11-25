@@ -9,6 +9,7 @@ window.APP_DATA = window.APP_DATA || {};
 APP_DATA.lieux = [
   { id: 'producteur', nom: 'Producteur', emoji: '🧺', rythme: 'hebdo' },
   { id: 'boucherie', nom: 'Boucherie halal', emoji: '🥩', rythme: 'hebdo' },
+  { id: 'boulangerie', nom: 'Boulangerie', emoji: '🥖', rythme: 'hebdo' },
   { id: 'drive', nom: 'Drive', emoji: '🚗', rythme: 'hebdo' },
   { id: 'fourche', nom: 'La Fourche', emoji: '🌾', rythme: 'mensuel' },
   { id: 'orchestra', nom: 'Orchestra', emoji: '🍼', rythme: 'hebdo' }
@@ -230,6 +231,7 @@ APP_DATA.rayons = [
     rayon === 'Bébé' ? 'orchestra'
       : rayon === FL ? 'producteur'
       : rayon === BV ? 'boucherie'
+      : rayon === BO ? 'boulangerie'
       : (rayon === PL || FOURCHE_EPICERIE.has(id)) ? 'fourche'
       : 'drive';
 
