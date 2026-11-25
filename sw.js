@@ -1,6 +1,6 @@
 /* Service worker : garde l'app disponible hors-ligne (une fois hébergée en https).
    Changer VERSION à chaque mise à jour pour que les téléphones récupèrent les nouveaux fichiers. */
-const VERSION = 'nos-repas-v31';
+const VERSION = 'nos-repas-v33';
 const FICHIERS = [
   './', 'index.html', 'manifest.webmanifest',
   'css/base.css', 'css/components.css',
