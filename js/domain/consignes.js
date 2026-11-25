@@ -243,7 +243,7 @@ App.consignes = {
       if (!aVenir.includes(slotId) || !App.store.repas(p.recette)) return;
       bilan.cases++;
       const s = semaine.slots[slotId];
-      if (s && (s.type === 'ext' || s.consomme)) return;
+      if (s && (s.type === 'ext' || s.type === 'invite' || s.consomme)) return;
       if (s && (s.source === 'manuel' || s.envieId) && s.consigneId !== e.id) { bilan.gardes.push(slotId); return; }
       if (s && s.repasId === p.recette) return;
       if (!(slotId in c.avant)) c.avant[slotId] = s ? JSON.parse(JSON.stringify(s)) : null;
@@ -257,7 +257,7 @@ App.consignes = {
     App.consignes.cases(state, c).forEach(slotId => {
       bilan.cases++;
       const s = semaine.slots[slotId];
-      if (s && ['ext', 'restes', 'reporte'].includes(s.type)) return;
+      if (s && ['ext', 'invite', 'restes', 'reporte'].includes(s.type)) return;
       if (s && s.consomme) return;
       const r = s && s.repasId && App.store.repas(s.repasId);
       const ok = r && App.consignes.respecte(r, R) && App.consignes.correspond(r, R);

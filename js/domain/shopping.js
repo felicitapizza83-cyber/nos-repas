@@ -7,8 +7,13 @@
    - l'épicerie sèche bio (La Fourche) est commandée une fois par mois : voir fourcheMois(). */
 App.shopping = {
   /** Lieux où l'on fait les courses chaque semaine (La Fourche est mensuelle). */
-  LIEUX: ['producteur', 'boucherie', 'drive', 'orchestra'],
-  NOMS_LIEUX: { producteur: 'Producteur', boucherie: 'Boucherie halal', orchestra: 'Orchestra (bébé)' },
+  LIEUX: ['producteur', 'boucherie', 'boulangerie', 'drive', 'orchestra'],
+  NOMS_LIEUX: { producteur: 'Producteur', boucherie: 'Boucherie halal', boulangerie: 'Boulangerie', orchestra: 'Orchestra (bébé)' },
+  /** Menu déroulant « où l'acheter » (lieux de la semaine). */
+  optionsLieux(sel = 'drive') {
+    return App.shopping.LIEUX.map(id => { const L = window.APP_DATA.lieux.find(x => x.id === id) || { nom: id, emoji: '' };
+      return `<option value="${id}" ${id === sel ? 'selected' : ''}>${L.emoji} ${L.nom}</option>`; }).join('');
+  },
   /** Listes à vérifier chaque semaine dans les courses. */
   GROUPES: {
     desserts: { emoji: '🍎', nom: 'Desserts & fruits', aide: 'fruits, yaourts, compotes, glaces…' },
