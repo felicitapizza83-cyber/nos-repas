@@ -124,7 +124,7 @@ App.ui = {
     requestAnimationFrame(() => ov.classList.add('open'));
     ov.addEventListener('click', e => {
       if (e.target === ov) return App.ui.closeSheet();
-      const a = e.target.closest('[data-action]');
+      const a = e.target.closest('[data-action]:not(form)');
       if (a && handler) handler(a.dataset.action, a, ov, e);
     });
     ov.addEventListener('submit', e => {

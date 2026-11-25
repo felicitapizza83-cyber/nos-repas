@@ -193,7 +193,7 @@ ${repas}`]);
           if (m === 'midi' && !state.settings.midis) return;
           const s = sem && sem.slots[`${j.id}-${m}`];
           const r = s && s.repasId && App.store.repas(s.repasId);
-          const txt = !s ? 'libre' : s.type === 'ext' ? 'repas dehors' : s.type === 'restes' ? 'restes'
+          const txt = !s ? 'libre' : s.type === 'ext' ? 'repas dehors' : s.type === 'restes' ? 'restes' : s.type === 'invite' ? 'invités chez quelqu’un'
             : r ? r.nom + (s.personnes ? ` (${s.personnes} pers.)` : '') : 'à choisir';
           lignes.push(`${App.u.key(d)} ${j.nom.toLowerCase()} ${m} : ${txt}`);
         });

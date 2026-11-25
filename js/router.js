@@ -30,7 +30,7 @@ App.router = {
     const act = document.getElementById('topbar-action');
     act.innerHTML = view.tete ? view.tete(App.store.state) : '';
     act.onclick = e => {
-      const a = e.target.closest('[data-action]');
+      const a = e.target.closest('[data-action]:not(form)');
       if (a && view.teteClic) view.teteClic(a.dataset.action, a);
     };
     el.classList.toggle('entree', entree);

@@ -64,7 +64,7 @@
       courses: { coches: {}, stock: {}, ajouts: [], auDrive: {}, restesJetes: {}, maison: {} },
       achats: null,            // ce qui a été acheté (« Courses faites ✓ »)
       coursesFaitesLe: null,
-      depenses: { drive: null, producteur: null, orchestra: null, boucherie: null }
+      depenses: { drive: null, producteur: null, orchestra: null, boucherie: null, boulangerie: null }
     };
   }
 
@@ -85,6 +85,12 @@
     if (!state.migrations.includes('boucherie')) {
       state.ingredients.forEach(i => { if (i.rayon === 'Boucherie & volaille' && i.lieu === 'drive') i.lieu = 'boucherie'; });
       state.migrations.push('boucherie');
+    }
+    // Le pain s'achète à la boulangerie (plus au drive)
+    if (!state.migrations.includes('boulangerie')) {
+      state.ingredients.forEach(i => { if (i.rayon === 'Boulangerie' && i.lieu === 'drive') i.lieu = 'boulangerie'; });
+      (state.essentiels || []).forEach(e => { if (/^(pain|baguette|viennoiserie|croissant|brioche)/i.test(e.nom || '') && (e.lieu || 'drive') === 'drive') e.lieu = 'boulangerie'; });
+      state.migrations.push('boulangerie');
     }
     // Essentiels : unité, taille du pack et consommation par semaine (pour compter ce qu'on a)
     if (!state.migrations.includes('essentiels-qte')) {
