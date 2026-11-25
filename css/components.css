@@ -830,3 +830,20 @@ small.block, .block { display: block; }
   border: 0; padding: 0; display: grid; place-items: center; background: var(--primary); color: #fff; cursor: pointer; transition: opacity .15s, transform .15s; }
 .envie-form .envoyer:active { transform: translateY(-50%) scale(.92); }
 .envie-form input:placeholder-shown + .envoyer { opacity: .35; }
+
+/* Courses : un menu déroulant par lieu d'achat */
+.lieu-toggle { width: 100%; margin: 10px 0 0; padding: 14px 16px; gap: 10px; align-items: center; text-align: left;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 18px; font: inherit; color: inherit; cursor: pointer; }
+.lieu-toggle .lieu-nom { font-size: 1.08rem; font-weight: 600; }
+.lieu-toggle .chev { transition: transform .2s; line-height: 1; }
+.bloc-lieu.ouvert .lieu-toggle { border-color: var(--primary); }
+.bloc-lieu.ouvert .lieu-toggle .chev { transform: rotate(90deg); }
+.lieu-contenu { padding: 0 2px 6px; }
+.lieu-contenu .lieu-sub { margin-top: 8px; }
+.chips.boulange { margin-top: 12px; }
+
+/* Case du menu : Dehors / Invités / Restes */
+.choix-repas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.choix-repas .btn { flex-direction: column; gap: 2px; padding: 10px 4px; font-size: 1.3rem; line-height: 1.1; height: auto; }
+.choix-repas .btn span { font-size: .85rem; font-weight: 600; }
+.choix-repas .btn.on { border-color: var(--primary); background: var(--surface-2); }
