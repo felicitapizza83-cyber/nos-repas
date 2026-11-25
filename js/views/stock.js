@@ -98,7 +98,7 @@ App.views.stock = {
 
   mount(el) {
     el.onclick = e => {
-      const a = e.target.closest('[data-action]');
+      const a = e.target.closest('[data-action]:not(form)');
       if (!a) return;
       if (a.dataset.action === 'edit') App.views.stock.editer(a.dataset.id);
       if (a.dataset.action === 'repas') App.views.repas.detail(a.dataset.id);

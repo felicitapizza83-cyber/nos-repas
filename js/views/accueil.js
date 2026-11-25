@@ -66,7 +66,7 @@ App.views.accueil = {
         </div>`;
     } else {
       const txt = !s ? 'Rien de prévu pour l’instant' : s.type === 'ext' ? `🍽️ ${esc(s.label || 'Repas à l’extérieur')}`
-        : s.type === 'restes' ? '♻️ Restes' : s.type === 'envie' ? `💡 ${esc(s.label)} — recette à choisir` : 'Repas reporté';
+        : s.type === 'restes' ? '♻️ Restes' : s.type === 'invite' ? `🎉 Invités${s.label ? ' ' + esc(s.label) : ''}` : s.type === 'envie' ? `💡 ${esc(s.label)} — recette à choisir` : 'Repas reporté';
       hero = `
         <div class="jour-corps">
           <span class="jour-badge plat">${titre}</span>
@@ -185,7 +185,7 @@ App.views.accueil = {
 
   mount(el, state) {
     el.onclick = e => {
-      const a = e.target.closest('[data-action]');
+      const a = e.target.closest('[data-action]:not(form)');
       if (!a) return;
       const act = a.dataset.action;
       if (act === 'go') App.router.go(a.dataset.route);

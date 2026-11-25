@@ -3,12 +3,18 @@ App.views.courses = {
   title: 'Liste de courses',
   RAPIDES: [
     { nom: 'Fruits de la semaine', prix: 10, lieu: 'producteur' },
-    { nom: 'Pain', prix: 1.5, lieu: 'drive' },
+    { nom: 'Baguette', prix: 1.2, lieu: 'boulangerie' },
     { nom: 'Lait infantile', prix: 15, lieu: 'drive' },
     { nom: 'Yaourts nature', prix: 2.5, lieu: 'drive' }
   ],
 
   magasin: false,
+  /** Lieux dépliés dans la liste (tout est replié au départ, pour une liste légère). */
+  ouverts: {},
+  BOULANGERIE: [
+    { nom: 'Baguette', prix: 1.2 }, { nom: 'Pain complet', prix: 2.5 }, { nom: 'Croissants', prix: 4.4 },
+    { nom: 'Pains au chocolat', prix: 4.8 }, { nom: 'Brioche', prix: 4 }
+  ],
   verrou: null,
   onglet: 'repas',
 
@@ -68,12 +74,24 @@ App.views.courses = {
         <div class="item-side"><small>${euro(e.cout)}</small></div>
       </li>`;
 
+    // Chaque lieu est un menu déroulant : on touche « Producteur » et on voit ses fruits et légumes
+    const aPrendre = n => n ? `${n} article${n > 1 ? 's' : ''} à prendre` : '✓ rien à prendre';
+    const entete = (id, titre, sous, total) => `
+        <button class="lieu-head lieu-toggle" data-action="lieu-toggle" data-lieu="${id}" aria-expanded="${!!V.ouverts[id]}">
+          <span class="grow"><span class="lieu-nom">${titre}</span><small class="muted block">${sous}</small></span>
+          ${total != null ? `<strong>${euro(total)}</strong>` : ''}<span class="chev">›</span>
+        </button>`;
     const blocLieu = (id, titre, sousTitre) => {
       const L = l.lieux[id];
       const placard = id === 'drive' ? l.placard : [];
-      if (!L.rayons.length && !L.ajouts.length && !placard.length && !L.maison.length) return '';
-      return `<section class="bloc-lieu">
-        <div class="lieu-head"><h2>${titre}</h2><strong>${euro(L.total)}</strong></div>
+      const boulangerie = id === 'boulangerie';
+      if (!boulangerie && !L.rayons.length && !L.ajouts.length && !placard.length && !L.maison.length) return '';
+      const tous = [...L.rayons.flatMap(r => r.items), ...placard];
+      const restants = tous.filter(i => !i.coche && !i.enStock).length + L.ajouts.filter(a => !a.coche).length + L.maison.filter(e => !e.coche).length;
+      const ouvert = !!V.ouverts[id];
+      return `<section class="bloc-lieu ${ouvert ? 'ouvert' : ''}">
+        ${entete(id, titre, aPrendre(restants), L.total)}
+        ${!ouvert ? '' : `<div class="lieu-contenu">
         ${sousTitre && !V.magasin ? `<small class="muted lieu-sub">${sousTitre}</small>` : ''}
         ${L.rayons.map(r => `
           <h3 class="section-title">${esc(r.rayon)}</h3>
@@ -85,6 +103,9 @@ App.views.courses = {
           return its.length ? `<h3 class="section-title">${G.emoji} ${G.nom}</h3><ul class="card list">${trier(its).map(ligneEss).join('')}</ul>` : '';
         }).join('')}
         ${L.ajouts.length ? `<h3 class="section-title">En plus</h3><ul class="card list">${trier(L.ajouts).map(ligneAjout).join('')}</ul>` : ''}
+        ${boulangerie && !V.magasin ? `<div class="chips boulange">${V.BOULANGERIE.map((b, i) =>
+          `<button class="chip chip-btn" data-action="boulange" data-i="${i}">+ ${esc(b.nom)}</button>`).join('')}</div>` : ''}
+        </div>`}
       </section>`;
     };
 
@@ -129,18 +150,21 @@ App.views.courses = {
       <div class="lieux-grille">
       ${blocLieu('producteur', '🧺 Producteur', 'Fruits et légumes, chez le producteur à côté')}
       ${blocLieu('boucherie', '🥩 Boucherie halal', 'Viande et volaille halal, chez le boucher')}
+      ${blocLieu('boulangerie', '🥖 Boulangerie', 'Pain et viennoiseries, les jours où on en a envie')}
       ${blocLieu('drive', '🚗 Drive', App.u.esc(state.settings.drive))}
       ${blocLieu('orchestra', '🍼 Orchestra', 'Purées et compotes de bébé achetées')}
 
-      ${l.fourche.length && !V.magasin ? `<section class="bloc-lieu">
-        <div class="lieu-head"><h2>🌾 La Fourche</h2><button class="link-btn" data-action="go-fourche">Commande de ${App.u.moisLabel(m).split(' ')[0]} ›</button></div>
-        <small class="muted lieu-sub">Déjà prévu dans la commande bio mensuelle. S’il en manque, basculez l’article sur le drive.</small>
+      ${l.fourche.length && !V.magasin ? `<section class="bloc-lieu ${V.ouverts.fourche ? 'ouvert' : ''}">
+        ${entete('fourche', '🌾 La Fourche', `${l.fourche.length} produit${l.fourche.length > 1 ? 's' : ''} · déjà dans la commande du mois`, null)}
+        ${V.ouverts.fourche ? `<div class="lieu-contenu">
+        <small class="muted lieu-sub">Déjà prévu dans la commande bio mensuelle. S’il en manque, basculez l’article sur le drive.
+          <button class="link-btn" data-action="go-fourche">Commande de ${App.u.moisLabel(m).split(' ')[0]} ›</button></small>
         <ul class="card list">${l.fourche.map(i => `
           <li class="item">
             <div class="grow"><strong>${esc(i.nom)}</strong> <span class="muted">${qte(i.qty, i.unite)}</span>
               <small class="muted for">${i.repas.map(esc).join(', ')}</small></div>
             <button class="mini" data-action="au-drive" data-id="${i.id}">Manque → drive</button>
-          </li>`).join('')}</ul></section>` : ''}
+          </li>`).join('')}</ul></div>` : ''}</section>` : ''}
       </div>
 
       ${V.magasin ? '' : V.blocAjout()}
@@ -211,7 +235,7 @@ App.views.courses = {
           <input type="hidden" name="groupe" value="${groupe}"/>
           <input name="nom" placeholder="${groupe === 'desserts' ? 'Kiwis, crème dessert, madeleines…' : 'Piles, croquettes, ampoules…'}" autocomplete="off"/>
           <input name="prix" inputmode="decimal" placeholder="€" class="prix"/>
-          <select name="lieu" class="lieu-select"><option value="drive">Drive</option><option value="producteur">Producteur</option><option value="boucherie">Boucherie</option><option value="orchestra">Orchestra</option></select>
+          <select name="lieu" class="lieu-select">${App.shopping.optionsLieux()}</select>
           <button class="btn btn-primary" type="submit" aria-label="Ajouter">＋</button>
         </form>
         <small class="muted">Touchez un produit pour régler son unité, la taille du pack, la consommation par semaine, le prix et le lieu d’achat.${groupe === 'maison' ? ' L’eau suit les litres bus par jour (Réglages).' : ''}</small>
@@ -236,8 +260,7 @@ App.views.courses = {
               : `<label>Utilisé par semaine (environ)<input name="parSemaine" inputmode="decimal" value="${e.parSemaine ?? 1}"/></label>`}
         <div class="row">
           <label class="grow">Prix du pack (€)<input name="prix" inputmode="decimal" value="${e.prix || 0}"/></label>
-          <label class="grow">Où l’acheter<select name="lieu">${['drive', 'producteur', 'boucherie', 'orchestra'].map(l =>
-            `<option value="${l}" ${l === (e.lieu || 'drive') ? 'selected' : ''}>${(window.APP_DATA.lieux.find(x => x.id === l) || { nom: l }).nom}</option>`).join('')}</select></label>
+          <label class="grow">Où l’acheter<select name="lieu">${App.shopping.optionsLieux(e.lieu || 'drive')}</select></label>
         </div>
         <button class="btn btn-primary" type="submit">Enregistrer</button>
       </form>
@@ -268,7 +291,7 @@ App.views.courses = {
         <form class="add-form" data-action="ajout">
           <input name="nom" placeholder="Article…" autocomplete="off"/>
           <input name="prix" inputmode="decimal" placeholder="€" class="prix"/>
-          <select name="lieu" class="lieu-select"><option value="drive">Drive</option><option value="producteur">Producteur</option><option value="boucherie">Boucherie</option><option value="orchestra">Orchestra</option></select>
+          <select name="lieu" class="lieu-select">${App.shopping.optionsLieux()}</select>
           <button class="btn btn-primary" type="submit" aria-label="Ajouter">＋</button>
         </form>
         <div class="chips">
@@ -357,11 +380,17 @@ App.views.courses = {
         { id: App.u.uid(), nom, prix: App.u.num(f.prix.value) || 0, lieu: f.lieu.value, coche: false }));
     };
     el.onclick = e => {
-      const a = e.target.closest('[data-action]');
+      const a = e.target.closest('[data-action]:not(form)');
       if (!a) return;
       const act = a.dataset.action;
       if (App.commun.handle(act)) return;
       if (act === 'onglet') { V.onglet = a.dataset.v; App.router.render(false); }
+      else if (act === 'lieu-toggle') { V.ouverts[a.dataset.lieu] = !V.ouverts[a.dataset.lieu]; App.ui.haptique(); App.router.render(true); }
+      else if (act === 'boulange') {
+        const b = V.BOULANGERIE[+a.dataset.i];
+        App.store.update(() => sem().courses.ajouts.push({ id: App.u.uid(), ...b, lieu: 'boulangerie', coche: false }));
+        App.ui.toast(`${b.nom} ajouté à la boulangerie`);
+      }
       else if (act === 'ess-plus' || act === 'ess-moins') App.store.update(() => {
         const m = sem().courses.maison = sem().courses.maison || {};
         const v = typeof m[a.dataset.id] === 'number' ? m[a.dataset.id] : 0;

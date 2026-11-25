@@ -109,7 +109,7 @@ App.views.repas = {
       }
     };
     el.onclick = e => {
-      const a = e.target.closest('[data-action]');
+      const a = e.target.closest('[data-action]:not(form)');
       if (!a) return;
       const act = a.dataset.action, f = App.views.repas.filtre;
       const toggle = k => { f[k] = !f[k]; App.router.render(true); };

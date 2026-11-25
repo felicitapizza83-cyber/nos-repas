@@ -64,7 +64,7 @@ App.views.aide = {
       App.router.render(true);
     };
     el.onclick = async e => {
-      const a = e.target.closest('[data-action]');
+      const a = e.target.closest('[data-action]:not(form)');
       if (!a) return;
       if (a.dataset.action === 'retour-del') {
         App.views.aide.ecrire(App.views.aide.lire().filter(x => x.id !== a.dataset.id));

@@ -94,7 +94,7 @@ App.views.suivi = {
   mount(el, state) {
     const i = () => App.views.suivi.qui ?? App.store.state.settings.moi;
     el.onclick = e => {
-      const a = e.target.closest('[data-action]');
+      const a = e.target.closest('[data-action]:not(form)');
       if (!a) return;
       const act = a.dataset.action;
       if (act === 'qui') { App.views.suivi.qui = +a.dataset.i; App.router.render(true); }

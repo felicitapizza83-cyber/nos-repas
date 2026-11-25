@@ -34,7 +34,7 @@ App.views.ingredients = {
       el.querySelector('#ing-list').innerHTML = App.views.ingredients.liste(App.store.state);
     };
     el.onclick = e => {
-      const a = e.target.closest('[data-action]');
+      const a = e.target.closest('[data-action]:not(form)');
       if (a && a.dataset.action === 'edit') App.views.ingredients.editer(a.dataset.id);
     };
   },

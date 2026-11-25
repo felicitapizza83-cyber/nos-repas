@@ -7,6 +7,7 @@ App.views.menu = {
     if (!s) return '<span class="muted">—</span>';
     if (s.type === 'ext') return `🍽️ ${esc(s.label || 'Repas extérieur')}${s.montant ? ` · ${euro(s.montant)}` : ''}`;
     if (s.type === 'restes') return '♻️ Restes';
+    if (s.type === 'invite') return `🎉 Invités${s.label ? ` ${esc(s.label)}` : ''} <small class="muted">· 0 €</small>`;
     if (s.type === 'envie') return `💡 Envie : ${esc(s.label)} <small class="muted">— recette à choisir</small>`;
     const r = App.store.repas(s.repasId);
     const nom = r ? esc(r.nom) : 'Repas supprimé';
@@ -37,7 +38,7 @@ App.views.menu = {
           const cls = !s ? 'empty' : s.type;
           return `
             <button class="slot ${cls}" data-action="slot" data-slot="${id}">
-              ${r && s.type !== 'reporte' ? `<img class="thumb" src="${window.APP_DATA.imageRepas(r)}" alt="" loading="lazy"/>` : `<span class="thumb vide-thumb">${!s ? '＋' : s.type === 'ext' ? '🍽️' : s.type === 'restes' ? '♻️' : '💡'}</span>`}
+              ${r && s.type !== 'reporte' ? `<img class="thumb" src="${window.APP_DATA.imageRepas(r)}" alt="" loading="lazy"/>` : `<span class="thumb vide-thumb">${!s ? '＋' : s.type === 'ext' ? '🍽️' : s.type === 'restes' ? '♻️' : s.type === 'invite' ? '🎉' : '💡'}</span>`}
               <span class="slot-body"><small class="slot-moment">${m.nom}</small>
                 ${s ? App.views.menu.slotTexte(s) : '<span class="muted">Choisir un repas</span>'}
                 ${s && s.personnes ? `<small class="pill">👥 ${s.personnes} pers.</small>` : ''}
@@ -175,7 +176,7 @@ App.views.menu = {
 
   mount(el) {
     el.onclick = e => {
-      const a = e.target.closest('[data-action]');
+      const a = e.target.closest('[data-action]:not(form)');
       if (!a) return;
       const act = a.dataset.action;
       if (App.commun.handle(act)) return;
@@ -275,10 +276,16 @@ App.views.menu = {
     App.ui.sheet(`
       <h2>${App.commun.slotLabel(slotId)}</h2>
       ${actuel}
-      <div class="grid2">
-        <button class="btn" data-action="ext-toggle">🍽️ On mange dehors</button>
-        <button class="btn" data-action="restes">♻️ Restes</button>
+      <div class="choix-repas">
+        <button class="btn ${s && s.type === 'ext' ? 'on' : ''}" data-action="ext-toggle">🍽️<span>Dehors</span></button>
+        <button class="btn ${s && s.type === 'invite' ? 'on' : ''}" data-action="invite-toggle">🎉<span>Invités</span></button>
+        <button class="btn ${s && s.type === 'restes' ? 'on' : ''}" data-action="restes">♻️<span>Restes</span></button>
       </div>
+      <form class="invite-form ${s && s.type === 'invite' ? '' : 'hidden'} stack" data-action="invite">
+        <label>Chez qui ? <small class="muted">(facultatif)</small><input name="label" placeholder="chez maman, chez Karim…" value="${esc(s && s.type === 'invite' ? s.label || '' : '')}"/></label>
+        <button class="btn btn-primary" type="submit">Enregistrer</button>
+        <small class="muted">On ne paie rien : ce repas sort de la liste de courses et ne compte pas dans le budget.</small>
+      </form>
       <form class="ext-form ${s && s.type === 'ext' ? '' : 'hidden'} stack" data-action="ext">
         <div class="row">
           <label class="grow">Où ?<input name="label" placeholder="Restaurant, chez maman, cantine…" value="${esc(s && s.type === 'ext' ? s.label : '')}"/></label>
@@ -306,7 +313,9 @@ App.views.menu = {
       else if (action === 'creer-envie') App.views.repas.editer(null, s.label);
       else if (action === 'vider') set(null);
       else if (action === 'fiche') App.views.repas.detail(s.repasId);
-      else if (action === 'ext-toggle') ov.querySelector('.ext-form').classList.toggle('hidden');
+      else if (action === 'ext-toggle') { ov.querySelector('.invite-form').classList.add('hidden'); ov.querySelector('.ext-form').classList.toggle('hidden'); }
+      else if (action === 'invite-toggle') { ov.querySelector('.ext-form').classList.add('hidden'); ov.querySelector('.invite-form').classList.toggle('hidden'); }
+      else if (action === 'invite') set({ type: 'invite', label: target.label.value.trim(), montant: 0 });
       else if (action === 'ext') set({ type: 'ext', label: target.label.value.trim(), montant: App.u.num(target.montant.value) || 0 });
       else if (action === 'reporter') { App.views.menu.reporter(slotId); App.ui.closeSheet(); }
     });

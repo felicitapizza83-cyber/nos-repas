@@ -73,7 +73,7 @@ App.views.fourche = {
     const m = () => App.views.fourche.mois || App.u.moisDeSemaine(App.store.state.semaineActive);
     const f = () => App.store.fourche(m());
     el.onclick = async e => {
-      const a = e.target.closest('[data-action]');
+      const a = e.target.closest('[data-action]:not(form)');
       if (!a) return;
       const act = a.dataset.action;
       if (act === 'mois-prev' || act === 'mois-next') {

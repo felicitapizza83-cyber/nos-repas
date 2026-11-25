@@ -108,7 +108,7 @@ App.views.reglages = {
       }
     };
     el.onclick = async e => {
-      const a = e.target.closest('[data-action]');
+      const a = e.target.closest('[data-action]:not(form)');
       if (!a) return;
       const act = a.dataset.action;
       if (act === 'apparence') App.apparence.ouvrir(false);

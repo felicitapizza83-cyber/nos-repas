@@ -59,7 +59,7 @@ App.views.objectif = {
 
   mount(el) {
     el.onclick = e => {
-      const a = e.target.closest('[data-action]');
+      const a = e.target.closest('[data-action]:not(form)');
       if (!a) return;
       const act = a.dataset.action;
       if (App.commun.handle(act)) return;
